@@ -17,10 +17,14 @@ def move(x, y, z, rel=False, hop=True):
 
     feedrate = math.sqrt(pow(feedrateXY, 2) + pow(feedrateZ, 2))
 
+    locX = f"X{x:2f} " if x != None else ""
+    locY = f"Y{y:2f} " if y != None else ""
+    locZ = f"Z{z:2f} " if z != None else ""
+
     if (rel):
-        export.append(f"G91 G1 X{x:.2f} Y{y:.2f} Z{z:.2f} F{feedrate:.2f}")
+        export.append(f"G91 G1 {locX}{locY}{locZ}F{feedrate:.2f}")
     else:
-        export.append(f"G90 G1 X{x:.2f} Y{y:.2f} Z{z:.2f} F{feedrate:.2f}")
+        export.append(f"G90 G1 {locX}{locY}{locZ}F{feedrate:.2f}")
 
     if hop:
         export.append(f"G91 G1 Z-{hopHeight:.2f} F{feedrateZ:.2f}")
@@ -32,3 +36,12 @@ def home():
 
 def dwell(time=1):
     export.append(f"G4 P{time}")
+
+def setProgress(frac):
+    if (frac < 0):
+        frac = 0
+        print("Progress cannot be negative. Clipped.")
+    elif (frac > 1):
+        frac = 1
+        print("Progress cannot be greater than 100%. Clipped.")
+    export.append(f"M73 P{frac}")
