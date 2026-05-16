@@ -11,7 +11,7 @@
 # [ ] Integrate into sensor acquisition system
 #     (might need time at bottom point to get measurement)
 # [ ] Consider sensor hysteresis on waiting for next movement
-# [ ] Implement progress commands
+# [X] Implement progress commands
 # [ ] Add padding option for edge of sensor
 # [ ] Documentation
 
@@ -68,7 +68,7 @@ def probeGrid():
 
                 # Set progress
                 step = step + 1
-                mip.setProgress(step / stepTotal)
+                mip.setProgress(step / stepTotal * 100)
 
 def main():
 
@@ -82,7 +82,7 @@ def main():
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
     probeGrid()
-    mip.setProgress(1)
+    mip.setProgress(100)
 
     codeFile = None
 

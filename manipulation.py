@@ -41,7 +41,7 @@ def setProgress(frac):
     if (frac < 0):
         frac = 0
         print("Progress cannot be negative. Clipped.")
-    elif (frac > 1):
-        frac = 1
+    elif (frac > 100):
+        frac = 100
         print("Progress cannot be greater than 100%. Clipped.")
-    export.append(f"M73 P{frac}")
+    export.append(f"M73 P{frac:.0f}")
