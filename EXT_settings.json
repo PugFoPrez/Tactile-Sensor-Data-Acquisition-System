@@ -1,0 +1,9 @@
+{
+    "port": "/dev/ttyUSB0",
+    "baud": "115200",
+    "output_file": "output.csv",
+    "points_x": 3,
+    "points_y": 3,
+    "dist_x": 50,
+    "dist_y": 40
+}
