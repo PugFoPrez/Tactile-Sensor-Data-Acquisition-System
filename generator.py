@@ -14,30 +14,43 @@
 # [X] Implement progress commands
 # [ ] Add padding option for edge of sensor
 # [ ] Documentation
+# [ ] Option for multiple sensors to be placed on the same bed - overnight batch testing
+#     Issues with how to read multiple bits of data
+# [ ] GUI to make setting parameters easier and view points/path
+# [ ] Allow for slanted & non-planar top surfaces to be specified
+# [ ] Bounds check before movement to prevent collisions
+# [ ] Modify for serial communication and not gcode file creation
 
 from datetime import date
 import manipulation as mip
 import export
 import numpy as np
-
-filename = "testing.gcode"
-codeFile = open(filename, "w")
+# import json
+# import serial
+# import time
+# import sys
+# import termios
+# import tty
+# import os
+# import csv
 
 ix = 0
 iy = 1
 iz = 2
 
+# DOCUMENT CHANGES!!!!!!!!!!!!!!!!
+
 # Probing Offset corresponds to the topmost SW surface of the sensor
 probingOffset = [100, 100, 40]
 # Where to start and end probing
-probingMin = [0, 0, -40]
-probingMax = [100, 100, -5]
+probingMin = [0, 0, -10]
+probingMax = [30, 30, -5]
 # Amount of samples to probe in between each axis
-probingSteps = [5, 5, 4]
+probingSteps = [3, 3, 2]
 
 def entryCode():
     mip.comment("G21 - Set units to millimetres")
-    export.append("G21")
+    export.send("G21")
 
     mip.comment("Home")
     mip.home()
@@ -77,12 +90,17 @@ def main():
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
 
     # Begin writing gcode
+    print("Entry")
     entryCode()
 
+    print("Probe")
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
     probeGrid()
     mip.setProgress(100)
+
+    print("Probing Completed")
+    mip.home()
 
     codeFile = None
 
