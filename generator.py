@@ -25,6 +25,7 @@ from datetime import date
 import manipulation as mip
 import export
 import numpy as np
+import measure as meas
 # import json
 # import serial
 # import time
@@ -76,7 +77,13 @@ def probeGrid():
                 # Move to point above
                 mip.move(xx, yy, probingOffset[iz] + 5)
                 mip.move(xx, yy, zz, hop=False)
-                mip.dwell(0.5)
+                mip.dwell(0.25)
+                # Save measurements
+                loadCellMeas = 0
+                eFleshMeas = [0,0,0,0,0]
+                meas.saveData([x,y,z], True, False)
+                mip.dwell(0.25)
+                # Move on
                 mip.move(xx, yy, probingOffset[iz], hop=False)
 
                 # Set progress
@@ -88,6 +95,9 @@ def main():
     print("Gcode Generator for sensor planar data acquisition")
 
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
+
+    # Start streaming data
+    meas.initStreaming()
 
     # Begin writing gcode
     print("Entry")
@@ -101,6 +111,9 @@ def main():
 
     print("Probing Completed")
     mip.home()
+
+    # Stop streaming data
+    meas.stopStreaming()
 
     codeFile = None
 
