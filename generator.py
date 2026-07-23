@@ -42,12 +42,12 @@ iz = 2
 # DOCUMENT CHANGES!!!!!!!!!!!!!!!!
 
 # Probing Offset corresponds to the topmost SW surface of the sensor
-probingOffset = [100, 100, 40]
+probingOffset = [95, 95, 25]
 # Where to start and end probing
-probingMin = [0, 0, -10]
+probingMin = [0, 0, -5]
 probingMax = [30, 30, -5]
 # Amount of samples to probe in between each axis
-probingSteps = [3, 3, 2]
+probingSteps = [3, 3, 1]
 
 def entryCode():
     mip.comment("G21 - Set units to millimetres")
@@ -79,9 +79,7 @@ def probeGrid():
                 mip.move(xx, yy, zz, hop=False)
                 mip.dwell(0.25)
                 # Save measurements
-                loadCellMeas = 0
-                eFleshMeas = [0,0,0,0,0]
-                meas.saveData([x,y,z], True, False)
+                meas.saveData([x,y,z])
                 mip.dwell(0.25)
                 # Move on
                 mip.move(xx, yy, probingOffset[iz], hop=False)
@@ -97,7 +95,11 @@ def main():
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
 
     # Start streaming data
-    meas.initStreaming()
+    meas.eFleshMeasure.initStreaming()
+    meas.measurements = []
+
+    # Set baselines measurements
+    meas.eFleshMeasure.setBaseline()
 
     # Begin writing gcode
     print("Entry")
@@ -113,7 +115,7 @@ def main():
     mip.home()
 
     # Stop streaming data
-    meas.stopStreaming()
+    meas.eFleshMeasure.stopStreaming()
 
     codeFile = None
 

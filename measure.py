@@ -15,8 +15,6 @@ import argparse
 
 defaultPort = "/dev/ttyACM0"
 
-sensorStream = None
-
 class measurement:
     def __init__(self, position=[0,0,0], loadCell=[0], eFlesh=[0,0,0,0,0]):
         self.position = position
@@ -26,25 +24,31 @@ class measurement:
 measurements = []
 
 class eFleshMeasure:
-    def initStreaming(port=defaultPort):
+    sensorStream = None
+    ef_baseline = None
+
+    @classmethod
+    def initStreaming(cls, port=defaultPort):
         # Begin streaming with sensor
-        sensorStream = AnySkinProcess(
+        cls.sensorStream = AnySkinProcess(
             num_mags=5,
             port=port,
         )
-        sensorStream.start()
+        cls.sensorStream.start()
         time.sleep(0.5)
 
-    def stopStreaming():
-        if sensorStream is not None:
-            sensorStream.pause_streaming()
-            sensorStream.join()
+    @classmethod
+    def stopStreaming(cls):
+        if cls.sensorStream is not None:
+            cls.sensorStream.pause_streaming()
+            cls.sensorStream.join()
 
-    def sampleSensor(numSamples=5):
-        if sensorStream is None:
+    @classmethod
+    def sampleSensor(cls, numSamples=5):
+        if cls.sensorStream is None:
             eFleshMeasure.initStreaming()
 
-        data = sensorStream.get_data(num_samples=numSamples)
+        data = cls.sensorStream.get_data(num_samples=numSamples)
         data = np.array(data)[:, 1:]
         data = np.mean(data, axis=0)
 
@@ -56,12 +60,15 @@ class eFleshMeasure:
 
         return data_mag
 
-def saveData(pos, measEFlesh=True, measLoadCell=True):
+    @classmethod
+    def setBaseline(cls, numSamples=20):
+        cls.ef_baseline = eFleshMeasure.sampleSensor(numSamples=numSamples)
+
+def saveData(pos):
     # Get eFlesh measurements
-    if measEFlesh:
-        ef_baseline = eFleshMeasure.sampleSensor(numSamples=20)
-        ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
-        ef_val = ef_sensorData - ef_baseline
+    ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
+    ef_val = ef_sensorData - eFleshMeasure.ef_baseline
+    print(f"Measured EF: {ef_val}")
 
     # Save measurements
     measurements.append(measurement(position=pos, eFlesh=ef_val))
