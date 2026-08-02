@@ -13,6 +13,8 @@ from datetime import datetime
 from anyskin import AnySkinProcess
 import argparse
 
+import serial
+
 defaultPort = "/dev/ttyACM0"
 
 class measurement:
@@ -64,6 +66,55 @@ class eFleshMeasure:
     def setBaseline(cls, numSamples=20):
         cls.ef_baseline = eFleshMeasure.sampleSensor(numSamples=numSamples)
 
+class loadCellMeasure:
+    srl = None
+    reading_tare = 0
+    reading_ref = float('inf')
+    mass_ref = float('inf')
+
+    @classmethod
+    def initSensor(cls, port=defaultPort):
+        cls.srl = serial.Serial(port, 9600, timeout=1)
+        time.sleep(0.1)
+        cls.srl.reset_input_buffer()
+
+    @classmethod
+    def tareSensor(cls, numSamples=20):
+        cls.reading_tare = cls.sampleRawVal(numSamples)
+
+    @classmethod
+    def calibrate(cls, knownMass, numSamples=20):
+        cls.mass_ref = knownMass
+        cls.reading_ref = cls.sampleRawVal(numSamples)
+
+    @classmethod
+    def sampleRawVal(cls, numSamples=5):
+        #TODO num samples - below is Claude generated - TODO verify
+        cls.srl.reset_input_buffer()  # discard stale backlog first
+        # Throw away one line, since it may have been mid-transmission when we flushed
+        cls.srl.readline()
+
+        values = []
+        while len(values) < numSamples:
+            raw = cls.srl.readline()
+            line = raw.decode('utf-8', errors='ignore').strip()
+            if not line:
+                continue
+            try:
+                values.append(int(float(line)))
+            except ValueError:
+                continue
+
+        return sum(values) / len(values)
+
+    @classmethod
+    def sampleSensor(cls, numSamples=5):
+        raw = cls.sampleRawVal()
+
+        fraction_of_ref_mass = (raw - cls.reading_tare) / (cls.reading_ref - cls.reading_tare)
+        mass = fraction_of_ref_mass * cls.mass_ref
+        return mass
+
 def saveData(pos):
     # Get eFlesh measurements
     ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
@@ -72,3 +123,25 @@ def saveData(pos):
 
     # Save measurements
     measurements.append(measurement(position=pos, eFlesh=ef_val))
+
+
+def main():
+    loadCellMeasure.initSensor("/dev/ttyACM0")
+
+    print("Tare")
+    loadCellMeasure.tareSensor()
+    print(f"Tare {loadCellMeasure.reading_tare:0.3f}")
+
+    print("Calibrating in 3 seconds")
+    time.sleep(3)
+    loadCellMeasure.calibrate(0.377)
+    print(f"Ref {loadCellMeasure.reading_ref:0.3f}")
+
+    time.sleep(1)
+    while True:
+        print(f"Read value of {loadCellMeasure.sampleSensor():0.3f} kg")
+        time.sleep(0.5)
+
+if __name__ == "__main__":
+    # Standard check to ensure script is run directly
+    main()

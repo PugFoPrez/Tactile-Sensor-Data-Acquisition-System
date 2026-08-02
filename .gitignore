@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+TESTING*.py
+testing.gcode
+LOADCELLSAVE_code.py
