@@ -21,12 +21,18 @@
 # [ ] Bounds check before movement to prevent collisions
 # [ ] Modify for serial communication and not gcode file creation
 
+# [ ] Improve calibration setup (Ask for user request)
+# [ ] Improve setup (and maybe device recognition)
+# [x] Write to csv file
+# [ ] Insulate shielding cable
+
 from datetime import date
 import manipulation as mip
 import export
 import numpy as np
 import measure as meas
 import time
+from rich.progress import Progress
 # import json
 # import serial
 # import time
@@ -45,10 +51,13 @@ iz = 2
 # Probing Offset corresponds to the topmost SW surface of the sensor
 probingOffset = [95, 95, 25]
 # Where to start and end probing
-probingMin = [0, 0, -5]
+probingMin = [0, 0, -1]
 probingMax = [30, 30, -5]
 # Amount of samples to probe in between each axis
 probingSteps = [3, 3, 1]
+
+progressBar = None
+task_probing = None
 
 def entryCode():
     mip.comment("G21 - Set units to millimetres")
@@ -58,8 +67,6 @@ def entryCode():
     mip.home()
 
 def probeGrid():
-    print(f"Total probing points: {probingSteps[ix] * probingSteps[iy] * probingSteps[iz]}")
-
     pointsX = np.linspace(probingMin[ix], probingMax[ix], probingSteps[ix])
     pointsY = np.linspace(probingMin[iy], probingMax[iy], probingSteps[iy])
     pointsZ = np.linspace(probingMin[iz], probingMax[iz], probingSteps[iz])
@@ -88,16 +95,19 @@ def probeGrid():
                 # Set progress
                 step = step + 1
                 mip.setProgress(step / stepTotal * 100)
+                progressBar.update(task_probing, advance=1)
 
 def main():
+    global task_probing
+    global progressBar
 
     print("Gcode Generator for sensor planar data acquisition")
 
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
 
     # Start streaming data
-    meas.eFleshMeasure.initStreaming()
-    meas.loadCellMeasure.initSensor()
+    meas.eFleshMeasure.initStreaming(port="/dev/ttyACM0")
+    meas.loadCellMeasure.initSensor(port="/dev/ttyACM1")
     meas.measurements = []
 
     # Set baselines measurements
@@ -106,17 +116,27 @@ def main():
     meas.eFleshMeasure.setBaseline()
     meas.loadCellMeasure.tareSensor()
     # TODO requires user interaction to calibrate
-    meas.loadCellMeasure.calibrate()
+    print("Calibrating in 2 seconds")
+    time.sleep(2)
+    meas.loadCellMeasure.calibrate(0.5)
+    print("Calibrated")
+    time.sleep(1)
 
     # Begin writing gcode
-    print("Entry")
+    print("Entry Code")
     entryCode()
 
-    print("Probe")
+    # Progress bar
+    progressBar = Progress()
+    stepCount = probingSteps[ix] * probingSteps[iy] * probingSteps[iz]
+    task_probing = progressBar.add_task("Probing...", total=stepCount)
+    progressBar.start()
+    # Probing
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
     probeGrid()
     mip.setProgress(100)
+    progressBar.stop()
 
     print("Probing Completed")
     mip.home()
@@ -124,7 +144,8 @@ def main():
     # Stop streaming data
     meas.eFleshMeasure.stopStreaming()
 
-    codeFile = None
+    # Write data
+    meas.writeData()
 
 if __name__ == "__main__":
     # Standard check to ensure script is run directly

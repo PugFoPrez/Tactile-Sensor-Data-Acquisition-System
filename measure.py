@@ -9,19 +9,26 @@ import numpy as np
 import os
 
 import sys
-from datetime import datetime
 from anyskin import AnySkinProcess
 import argparse
 
 import serial
+import csv
+from datetime import datetime
 
 defaultPort = "/dev/ttyACM0"
+
+data_filename = "measurements/meas_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".csv"
 
 class measurement:
     def __init__(self, position=[0,0,0], loadCell=[0], eFlesh=[0,0,0,0,0]):
         self.position = position
         self.loadCell = loadCell
         self.eFlesh = eFlesh
+
+    def flatten(self, fieldnames):
+        values = list(self.position) + [self.loadCell] + list(self.eFlesh)
+        return dict(zip(fieldnames, values))
 
 measurements = []
 
@@ -119,32 +126,22 @@ def saveData(pos):
     # Get eFlesh measurements
     ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
     ef_val = ef_sensorData - eFleshMeasure.ef_baseline
-    print(f"Measured EF: {ef_val}")
+    # print(f"Measured EF: {ef_val}")
 
     # Get load cell measurements
     lc_sensorData = loadCellMeasure.sampleSensor(numSamples=3)
-    print(f"Measured LC: {lc_sensorData}")
+    # print(f"Measured LC: {lc_sensorData}")
 
     # Save measurements
     measurements.append(measurement(position=pos, eFlesh=ef_val, loadCell=lc_sensorData))
 
-def main():
-    loadCellMeasure.initSensor("/dev/ttyACM0")
+def writeData(filename=data_filename):
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    print("Tare")
-    loadCellMeasure.tareSensor()
-    print(f"Tare {loadCellMeasure.reading_tare:0.3f}")
+    fieldnames = ["X", "Y", "Z", "LoadCell(kg)", "eFlesh1", "eFlesh2", "eFlesh3", "eFlesh4", "eFlesh5"]
 
-    print("Calibrating in 3 seconds")
-    time.sleep(3)
-    loadCellMeasure.calibrate(0.377)
-    print(f"Ref {loadCellMeasure.reading_ref:0.3f}")
-
-    time.sleep(1)
-    while True:
-        print(f"Read value of {loadCellMeasure.sampleSensor():0.3f} kg")
-        time.sleep(0.5)
-
-if __name__ == "__main__":
-    # Standard check to ensure script is run directly
-    main()
+    with open(filename, "w", newline="") as data_file:
+        writer = csv.DictWriter(data_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for measurement in measurements:
+            writer.writerow(measurement.flatten(fieldnames))

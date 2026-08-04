@@ -4,3 +4,4 @@ __pycache__/
 TESTING*.py
 testing.gcode
 LOADCELLSAVE_code.py
+measurements/*

@@ -4,9 +4,7 @@ import time
 import serial
 import json
 
-filename = "testing.gcode"
-codeFile = open(filename, "w")
-sendSerial = True
+sendSerial = False
 
 # Below function is adapted from XDGFX
 def readSettings():
@@ -16,6 +14,9 @@ def readSettings():
 
 # Below function is adapted from XDGFX
 def initSerial():
+    if not sendSerial:
+        return
+
     print("Connecting to serial...")
     s = serial.Serial(settings["port"], settings["baud"], timeout=30)
 

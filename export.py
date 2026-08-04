@@ -1,5 +1,8 @@
 import communication as comms
 
+gcode_filename = "testing.gcode"
+gcodeFile = open(gcode_filename, "w")
+
 def send(text):
     text = text + "\nM400"
     append(text)
@@ -7,9 +10,7 @@ def send(text):
         sendGcode(text)
 
 def append(text):
-    codeFile = comms.codeFile
-
-    codeFile.write(f"{text}\n")
+    gcodeFile.write(f"{text}\n")
 
 def sendGcode(text):
     text = text.strip()  # Strip all EOL characters for streaming
