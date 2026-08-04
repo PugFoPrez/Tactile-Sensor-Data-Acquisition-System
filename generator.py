@@ -33,6 +33,9 @@ import numpy as np
 import measure as meas
 import time
 from rich.progress import Progress
+
+import terminal as term
+
 # import json
 # import serial
 # import time
@@ -58,6 +61,12 @@ probingSteps = [3, 3, 1]
 
 progressBar = None
 task_probing = None
+
+# From XDGFX - Adapted to fix odd terminal behaviour
+# Source - https://stackoverflow.com/a/72825322
+# Posted by Flux, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-08-04, License - CC BY-SA 4.0
+
 
 def entryCode():
     mip.comment("G21 - Set units to millimetres")
@@ -97,6 +106,49 @@ def probeGrid():
                 mip.setProgress(step / stepTotal * 100)
                 progressBar.update(task_probing, advance=1)
 
+def calibrate():
+    term.setMode(charMode="hide")
+    print("Please move the probe onto the temporary scale for calibration")
+    print("e: Move up        (+z)")
+    print("q: Move down      (-z)")
+    print("d: Move right     (+z)")
+    print("a: Move left      (-x)")
+    print("w: Move forwards  (+y)")
+    print("s: Move backwards (-y)")
+    print("f: Finish calibration")
+
+    while True:
+        char = term.getch()
+
+        if char == "e": # Move up
+            mip.move(0, 0, 0.5, rel=True, hop=False)
+        elif char == "q": # Move down
+            mip.move(0, 0, -0.5, rel=True, hop=False)
+        elif char == "a": # Move left
+            mip.move(-5, 0, 0, rel=True, hop=False)
+        elif char == "d": # Move right
+            mip.move(5, 0, 0, rel=True, hop=False)
+        elif char == "w": # Move forwards
+            mip.move(0, 5, 0, rel=True, hop=False)
+        elif char == "s": # Move back
+            mip.move(0, -5, 0, rel=True, hop=False)
+        elif char == "f": # Finish
+            break
+    term.setMode(charMode="show")
+
+    print("Please enter the recorded mass in kilograms like: \"1.04\"")
+    valid = False
+    while not valid:
+        try:
+            recorded_mass = float(input())
+            valid = True
+        except:
+            print("Invalid input")
+
+    meas.loadCellMeasure.calibrate(recorded_mass)
+
+    return
+
 def main():
     global task_probing
     global progressBar
@@ -110,16 +162,17 @@ def main():
     meas.loadCellMeasure.initSensor(port="/dev/ttyACM1")
     meas.measurements = []
 
+    mip.home()
+
     # Set baselines measurements
     print("Setting baselines, please keep objects clear of sensor")
     time.sleep(1)
     meas.eFleshMeasure.setBaseline()
     meas.loadCellMeasure.tareSensor()
-    # TODO requires user interaction to calibrate
-    print("Calibrating in 2 seconds")
-    time.sleep(2)
-    meas.loadCellMeasure.calibrate(0.5)
-    print("Calibrated")
+
+    # Calibrating load cell
+    mip.move(10, 10, 20, hop=False)
+    calibrate()
     time.sleep(1)
 
     # Begin writing gcode

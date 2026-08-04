@@ -4,7 +4,7 @@ import time
 import serial
 import json
 
-sendSerial = False
+sendSerial = True
 
 # Below function is adapted from XDGFX
 def readSettings():
