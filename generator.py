@@ -26,6 +26,7 @@ import manipulation as mip
 import export
 import numpy as np
 import measure as meas
+import time
 # import json
 # import serial
 # import time
@@ -96,10 +97,16 @@ def main():
 
     # Start streaming data
     meas.eFleshMeasure.initStreaming()
+    meas.loadCellMeasure.initSensor()
     meas.measurements = []
 
     # Set baselines measurements
+    print("Setting baselines, please keep objects clear of sensor")
+    time.sleep(1)
     meas.eFleshMeasure.setBaseline()
+    meas.loadCellMeasure.tareSensor()
+    # TODO requires user interaction to calibrate
+    meas.loadCellMeasure.calibrate()
 
     # Begin writing gcode
     print("Entry")

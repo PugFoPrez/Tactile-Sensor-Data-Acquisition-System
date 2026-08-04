@@ -121,9 +121,12 @@ def saveData(pos):
     ef_val = ef_sensorData - eFleshMeasure.ef_baseline
     print(f"Measured EF: {ef_val}")
 
-    # Save measurements
-    measurements.append(measurement(position=pos, eFlesh=ef_val))
+    # Get load cell measurements
+    lc_sensorData = loadCellMeasure.sampleSensor(numSamples=3)
+    print(f"Measured LC: {lc_sensorData}")
 
+    # Save measurements
+    measurements.append(measurement(position=pos, eFlesh=ef_val, loadCell=lc_sensorData))
 
 def main():
     loadCellMeasure.initSensor("/dev/ttyACM0")
