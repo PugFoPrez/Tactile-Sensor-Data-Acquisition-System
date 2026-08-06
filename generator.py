@@ -8,23 +8,24 @@
 # [X] Separate move to allow for X, Y and Z moves individually
 #     (without relying on relative move) - Use None arg or optional args
 # [ ] For upward move: Z then XY, for downward move XY then Z - decide if this should be general in manipulation code or just assumed by user
-# [ ] Integrate into sensor acquisition system
+# [X] Integrate into sensor acquisition system
 #     (might need time at bottom point to get measurement)
 # [ ] Consider sensor hysteresis on waiting for next movement
 # [X] Implement progress commands
-# [ ] Add padding option for edge of sensor
-# [ ] Documentation
+# [X] Documentation
 # [ ] Option for multiple sensors to be placed on the same bed - overnight batch testing
 #     Issues with how to read multiple bits of data
 # [ ] GUI to make setting parameters easier and view points/path
 # [ ] Allow for slanted & non-planar top surfaces to be specified
 # [ ] Bounds check before movement to prevent collisions
-# [ ] Modify for serial communication and not gcode file creation
+# [X] Modify for serial communication and not gcode file creation
 
-# [ ] Improve calibration setup (Ask for user request)
+# [x] Improve calibration setup (Ask for user request)
 # [ ] Improve setup (and maybe device recognition)
 # [x] Write to csv file
 # [ ] Insulate shielding cable
+# [ ] Store calibration
+# [ ] Configure settings properly
 
 from datetime import date
 import manipulation as mip
@@ -36,23 +37,12 @@ from rich.progress import Progress
 
 import terminal as term
 
-# import json
-# import serial
-# import time
-# import sys
-# import termios
-# import tty
-# import os
-# import csv
-
 ix = 0
 iy = 1
 iz = 2
 
-# DOCUMENT CHANGES!!!!!!!!!!!!!!!!
-
 # Probing Offset corresponds to the topmost SW surface of the sensor
-probingOffset = [95, 95, 25]
+probingOffset = [102.5, 102.5, 28.5]
 # Where to start and end probing
 probingMin = [0, 0, -1]
 probingMax = [30, 30, -5]
@@ -61,12 +51,6 @@ probingSteps = [3, 3, 1]
 
 progressBar = None
 task_probing = None
-
-# From XDGFX - Adapted to fix odd terminal behaviour
-# Source - https://stackoverflow.com/a/72825322
-# Posted by Flux, modified by community. See post 'Timeline' for change history
-# Retrieved 2026-08-04, License - CC BY-SA 4.0
-
 
 def entryCode():
     mip.comment("G21 - Set units to millimetres")

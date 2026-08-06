@@ -1,0 +1,11 @@
+# Generic Packages
+datetime
+numpy
+rich
+# Terminal Communication
+readchar
+# Device Communication
+serial
+anyskin
+reskin_sensor
+argparse
