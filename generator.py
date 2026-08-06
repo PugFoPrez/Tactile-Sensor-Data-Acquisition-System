@@ -52,7 +52,11 @@ probingSteps = [3, 3, 1]
 progressBar = None
 task_probing = None
 
+
 def entryCode():
+    """This functions initialises the state of the 3D printer for use in the project.
+    Behaviour includes configuring the printer to use millimetres, as well as homing the printer.
+    """    
     mip.comment("G21 - Set units to millimetres")
     export.send("G21")
 
@@ -60,6 +64,9 @@ def entryCode():
     mip.home()
 
 def probeGrid():
+    """This function generates the point grid for the 3D printer to use in probing.
+    It additionally loops through each of these points and sends the appropriate movement commands to the printer, as well saving data from the sensors.
+    """    
     pointsX = np.linspace(probingMin[ix], probingMax[ix], probingSteps[ix])
     pointsY = np.linspace(probingMin[iy], probingMax[iy], probingSteps[iy])
     pointsZ = np.linspace(probingMin[iz], probingMax[iz], probingSteps[iz])
@@ -91,6 +98,8 @@ def probeGrid():
                 progressBar.update(task_probing, advance=1)
 
 def calibrate():
+    """This function is used for the load cell calibration process, prompting the user for readings from the external scale.
+    """    
     term.setMode(charMode="hide")
     print("Please move the probe onto the temporary scale for calibration")
     print("e: Move up        (+z)")

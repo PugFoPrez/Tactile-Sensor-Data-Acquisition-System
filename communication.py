@@ -8,12 +8,22 @@ sendSerial = True
 
 # Below function is adapted from XDGFX
 def readSettings():
+    """This function reads settings from the settings.json file which are used in configuring parameters associated with the serial communication.
+
+    Returns:
+        JSON Object: Stored settings as a JSON object
+    """    
     with open("settings.json") as settings_json:
         settings = json.load(settings_json)
         return settings
 
 # Below function is adapted from XDGFX
 def initSerial():
+    """This initialises serial communication with the 3D printer using settings from settings.json.
+
+    Returns:
+        Serial Object: 3D printer serial communication object.
+    """    
     if not sendSerial:
         return
 

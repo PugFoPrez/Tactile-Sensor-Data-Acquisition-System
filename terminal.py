@@ -12,11 +12,20 @@ orig = termios.tcgetattr(fd)
 # Retrieved 2026-08-04, License - CC BY-SA 4.0
 
 def setMode(charMode="show"):
+    """Sets the current mode of the terminal used in collecting real-time user input.
+
+    Args:
+        charMode (str, optional): "show" sets the terminal to its typical behaviour of allowing for extended user input. "hide" takes each character in real-time and does not show the character in the terminal. Defaults to "show".
+    """    
     if charMode == "show":
         termios.tcsetattr(fd, termios.TCSAFLUSH, orig)
-    if charMode == "hide":
+    elif charMode == "hide":
         tty.setcbreak(fd)
 
 def getch():
-    # return sys.stdin.read(1)
+    """This gets a single character from the terminal
+
+    Returns:
+        Char: The read character from user terminal input
+    """    
     return readchar.readchar() # This function handles the cbreak/raw logic internally

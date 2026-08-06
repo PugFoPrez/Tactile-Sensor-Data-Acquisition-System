@@ -21,23 +21,47 @@ defaultPort = "/dev/ttyACM0"
 data_filename = "measurements/meas_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".csv"
 
 class measurement:
+    """Measurement class for 3D printer positioning, load cell value, and eFlesh magnetometer values
+    """
     def __init__(self, position=[0,0,0], loadCell=[0], eFlesh=[0,0,0,0,0]):
+        """Initialises a new measurement object
+
+        Args:
+            position (list, optional): The X,Y,Z position of the printer toolhead. Defaults to [0,0,0].
+            loadCell (list, optional): The load cell measured value. Defaults to [0].
+            eFlesh (list, optional): The eFlesh magnetometer sensors measured values. Defaults to [0,0,0,0,0].
+        """
         self.position = position
         self.loadCell = loadCell
         self.eFlesh = eFlesh
 
     def flatten(self, fieldnames):
+        """Converts the variable structure of the measurement class into a single one-dimensional dictionary.
+
+        Args:
+            fieldnames (string list): Field names of each column in the dictionary
+
+        Returns:
+            Dictionary: Flattened variable structure
+        """
         values = list(self.position) + [self.loadCell] + list(self.eFlesh)
         return dict(zip(fieldnames, values))
 
 measurements = []
 
 class eFleshMeasure:
+    """Class of eFlesh measuring related functions.
+    """
     sensorStream = None
     ef_baseline = None
 
     @classmethod
     def initStreaming(cls, port=defaultPort):
+        """Configure streaming to the eFlesh AnySkin board.
+
+        Args:
+            port (string, optional): The USB port the eFlesh board is connected to. Defaults to defaultPort.
+        """
         # Begin streaming with sensor
         cls.sensorStream = AnySkinProcess(
             num_mags=5,
@@ -48,12 +72,22 @@ class eFleshMeasure:
 
     @classmethod
     def stopStreaming(cls):
+        """Close the serial stream with the eFlesh board.
+        """
         if cls.sensorStream is not None:
             cls.sensorStream.pause_streaming()
             cls.sensorStream.join()
 
     @classmethod
     def sampleSensor(cls, numSamples=5):
+        """Read the current values of the eFlesh sensor.
+
+        Args:
+            numSamples (int, optional): Number of samples to average over. Defaults to 5.
+
+        Returns:
+            float list: eFlesh board measurements for each magnetometer
+        """
         if cls.sensorStream is None:
             eFleshMeasure.initStreaming()
 
@@ -71,9 +105,17 @@ class eFleshMeasure:
 
     @classmethod
     def setBaseline(cls, numSamples=20):
+        """Set the zero reading of the board.
+        Note that this does not impact the following readings, and so ef_baseline must be used when determining the read value
+
+        Args:
+            numSamples (int, optional): The number of samples to average over. Defaults to 20.
+        """
         cls.ef_baseline = eFleshMeasure.sampleSensor(numSamples=numSamples)
 
 class loadCellMeasure:
+    """Class of load cell measuring functions
+    """
     srl = None
     reading_tare = 0
     reading_ref = float('inf')
@@ -81,21 +123,46 @@ class loadCellMeasure:
 
     @classmethod
     def initSensor(cls, port=defaultPort):
+        """Initialise the serial communication with the specified USB port.
+
+        Args:
+            port (string, optional): Which USB port to set up serial communication on. Defaults to defaultPort.
+        """        
         cls.srl = serial.Serial(port, 9600, timeout=1)
         time.sleep(0.1)
         cls.srl.reset_input_buffer()
 
     @classmethod
     def tareSensor(cls, numSamples=20):
+        """Set the zero value of the sensor. 
+        Note that unlike the eFlesh sensor, this tare value is accounted for when using sampleSensor().
+
+        Args:
+            numSamples (int, optional): The number of samples to average over. Defaults to 20.
+        """        
         cls.reading_tare = cls.sampleRawVal(numSamples)
 
     @classmethod
     def calibrate(cls, knownMass, numSamples=20):
+        """Calibrate the sensor using the tare and reference readings.
+
+        Args:
+            knownMass (_type_): The reference mass reading (in kg) that was recorded during calibration.
+            numSamples (int, optional): How many samples to average over. Defaults to 20.
+        """        
         cls.mass_ref = knownMass
         cls.reading_ref = cls.sampleRawVal(numSamples)
 
     @classmethod
     def sampleRawVal(cls, numSamples=5):
+        """Read the raw ADC values from the load cell sensor.
+
+        Args:
+            numSamples (int, optional): The number of samples to average over. Defaults to 5.
+
+        Returns:
+            _type_: _description_
+        """        
         #TODO num samples - below is Claude generated - TODO verify
         cls.srl.reset_input_buffer()  # discard stale backlog first
         # Throw away one line, since it may have been mid-transmission when we flushed
@@ -116,13 +183,26 @@ class loadCellMeasure:
 
     @classmethod
     def sampleSensor(cls, numSamples=5):
-        raw = cls.sampleRawVal()
+        """Get the mass reading from the sensor (in kg)
+
+        Args:
+            numSamples (int, optional): The number of samples to average over. Defaults to 5.
+
+        Returns:
+            _type_: _description_
+        """        
+        raw = cls.sampleRawVal(numSamples=numSamples)
 
         fraction_of_ref_mass = (raw - cls.reading_tare) / (cls.reading_ref - cls.reading_tare)
         mass = fraction_of_ref_mass * cls.mass_ref
         return mass
 
 def saveData(pos):
+    """Saves the current readings from the eFlesh sensor and load cell sensor, as well as the provided position to the global measurements list.
+
+    Args:
+        pos (Tuple of (X, Y, Z)): Position of the tool head
+    """    
     # Get eFlesh measurements
     ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
     ef_val = ef_sensorData - eFleshMeasure.ef_baseline
@@ -136,6 +216,11 @@ def saveData(pos):
     measurements.append(measurement(position=pos, eFlesh=ef_val, loadCell=lc_sensorData))
 
 def writeData(filename=data_filename):
+    """Writes the stored measurement data to the specified file in CSV format.
+
+    Args:
+        filename (string, optional): The name of the file to save the sensor measurements to. Defaults to data_filename.
+    """    
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     fieldnames = ["X", "Y", "Z", "LoadCell(kg)", "eFlesh1", "eFlesh2", "eFlesh3", "eFlesh4", "eFlesh5"]
