@@ -72,6 +72,8 @@ def probeGrid():
 
     step = 0
     stepTotal = len(pointsX) * len(pointsY) * len(pointsZ)
+    task_probing = progressBar.add_task("Probing...", total=stepTotal)
+    progressBar.start()
 
     for x in pointsX:
         for y in pointsY:
@@ -95,6 +97,28 @@ def probeGrid():
                 step = step + 1
                 mip.setProgress(step / stepTotal * 100)
                 progressBar.update(task_probing, advance=1)
+
+def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
+    """This function probes the center of the sensor to determine normal force values.
+    """
+
+    task_probing = progressBar.add_task("Probing...", total=1)
+    progressBar.start()
+
+    mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})")
+    # Move to point above
+    mip.move(x, y, probingOffset[iz] + 5)
+    mip.move(x, y, z, hop=False)
+    mip.dwell(0.25)
+    # Save measurements
+    meas.saveData([x,y,z])
+    mip.dwell(0.25)
+    # Move on
+    mip.move(x, y, probingOffset[iz], hop=False)
+
+    # Set progress
+    mip.setProgress(100)
+    progressBar.update(task_probing, advance=1)
 
 def calibrate():
     """This function is used for the load cell calibration process, prompting the user for readings from the external scale.
@@ -173,13 +197,10 @@ def main():
 
     # Progress bar
     progressBar = Progress()
-    stepCount = probingSteps[ix] * probingSteps[iy] * probingSteps[iz]
-    task_probing = progressBar.add_task("Probing...", total=stepCount)
-    progressBar.start()
-    # Probing
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
-    probeGrid()
+    # probeGrid()
+    probeNormalForce()
     mip.setProgress(100)
     progressBar.stop()
 
