@@ -32,6 +32,8 @@ The USB device location will need to be found using `ls /dev/ | grep -e ACM -e U
 
 The printer's hotend needs to be removed from the printhead and replaced with the load cell holder. The design for the load cell holder can be found #todo [here]().
 
+A holder for the eFlesh sensor has also been designed to keep the eFlesh board in place during probing. The design for the holder can be found #todo [here](). Note that this has been designed for one implementation of an eFlesh/magnetometer board holder and may need redesign for other implementations.
+
 #### eFlesh
 
 The `reskin-sensor` and `anyskin` packages are required to get data from the eFlesh board. Please make sure these are installed using `pip install reskin-sensor anyskin`.
@@ -105,7 +107,31 @@ The final load cell configuration is shown below.
 #todo image of load cell configuration
 
 ## Running the script
-The code requires some configuration before it can be run
+Configuring the script is subject to change as it is developed.
 
+Currently each Python script has variables at the the head of each file which can be configured. These are mostly self explanatory. In general, `manipulation.py` has constants that configure the specifications and constraints related to the CNC machine, and `generator.py` variables that control the probing behaviour of the script. An important note is that `communication.py` has a boolean for disabling serial communication - this is useful for developing purposes so that access to a CNC machine isn't needed.
+
+In `generator.py`, the ports of the load cell and eFlesh sensor should be set in the main function. The main function will also be were different probing method should be written as code - a grid based approach has been provided to be used as a template.
+
+Once the script has been properly set up, it can be run by simply executing `python3 generator.py` on the command line.
+
+The script will then prompt to keep any objects clear of the sensors to allow for a zero point to be established for each sensor.
+
+The load cell will then need to be calibrated. This will require that the eFlesh sensor and holder be removed from the CNC machine's working area and replaced with a scale (ideally with a maximum range approximately equal to the load cell's full scale specification). Using the controls as listed, the load cell needs to be pushed onto the scale to provide a reference value. Once a reference value is recorded the calibration step should be completed using the prompted button ("F") immediately - the reading changes with time due flex and springiness of the platform. Then enter the reading in kilograms. This will complete the calibration process.
+
+The script will now continue on to probe the sensor as specified in the main function. The outputs will be saved in the `measurements/` folder.
 
 ## Overview of the codes
+Python scripts:
+- `communication.py`: This script handles serial communication with the CNC machine using gcode.
+- `export.py`: This script handles exporting gcode to both the CNC machine's serial line and to the `testing.gcode` file for checking.
+- `generator.py`: This is the main script used to configure the probing behaviour of the script.
+- `manipulation.py`: This script handles formatting of CNC machine behaviours into appropriate gcode commands.
+- `measure.py`: This script handles the zeroing, calibration, and measurement of the eFlesh sensor and load cell.
+- `terminal.py`: This script handles getting user input from the terminal and changing terminal behaviour.
+
+Configuration:
+- `settings.json`: User defined settings to be used to configure communication and probing behaviour.
+
+Other files:
+- `requirements.txt`: Listing of all required packages for the script.

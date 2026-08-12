@@ -52,7 +52,6 @@ probingSteps = [3, 3, 1]
 progressBar = None
 task_probing = None
 
-
 def entryCode():
     """This functions initialises the state of the 3D printer for use in the project.
     Behaviour includes configuring the printer to use millimetres, as well as homing the printer.
