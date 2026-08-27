@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+#
+# Created by Bruce Davidson - Curtin University ID: 20796033
+# 
+# Created:       4th Aug 2026
+# Last Modified: 6th Aug 2026 (Bruce Davidson)
+#
+# \terminal.py
+# This script handles getting user input from the terminal and changing terminal behaviour.
+
 import sys
 import termios
 import tty

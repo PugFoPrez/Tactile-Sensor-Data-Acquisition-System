@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-
-#!usr/bin/env python3
+#
+# Created by Bruce Davidson - Curtin University ID: 20796033
+# 
+# Created:       21th July 2026
+# Last Modified: 6th Aug 2026 (Bruce Davidson)
+#
+# \measure.py
+# This script handles the zeroing, calibration, and measurement of the eFlesh sensor and load cell.
 
 # Below is adapted from the viz_eflesh.py codes
 

@@ -113,6 +113,8 @@ Currently each Python script has variables at the the head of each file which ca
 
 In `generator.py`, the ports of the load cell and eFlesh sensor should be set in the main function. The main function will also be were different probing method should be written as code - a grid based approach has been provided to be used as a template.
 
+The position of the sensor relative to the machine's home position will also need to be set. This can be accomplished by using the machine's control panel to move the probing head to the top, south-western most (left of, and closest to the user) point of the sensor. Note for the eFlesh sensor that some margin was used in the original paper's design for the 'active' area of the sensor.
+
 Once the script has been properly set up, it can be run by simply executing `python3 generator.py` on the command line.
 
 The script will then prompt to keep any objects clear of the sensors to allow for a zero point to be established for each sensor.

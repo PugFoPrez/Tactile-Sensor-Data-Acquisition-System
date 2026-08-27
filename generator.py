@@ -1,6 +1,11 @@
-# Created by Bruce Davidson - Curtin University ID: 20796033
-# Created: 12th May 2026
+#!/usr/bin/env python3
 #
+# Created by Bruce Davidson - Curtin University ID: 20796033
+# 
+# Created:       12th May 2026
+# Last Modified: 27th Aug 2026 (Bruce Davidson)
+#
+# \generator.py
 # This script is used to generate gcode used for probing of a tactile sensor for data acquisition.
 
 # TODO
@@ -15,13 +20,14 @@
 # [X] Documentation
 # [ ] Option for multiple sensors to be placed on the same bed - overnight batch testing
 #     Issues with how to read multiple bits of data
+#     Current sensor setups only assume that one sensor is connected at a time
 # [ ] GUI to make setting parameters easier and view points/path
 # [ ] Allow for slanted & non-planar top surfaces to be specified
 # [ ] Bounds check before movement to prevent collisions
 # [X] Modify for serial communication and not gcode file creation
 
 # [x] Improve calibration setup (Ask for user request)
-# [ ] Improve setup (and maybe device recognition)
+# [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
 # [x] Write to csv file
 # [ ] Insulate shielding cable
 # [ ] Store calibration
@@ -181,7 +187,7 @@ def main():
     mip.home()
 
     # Set baselines measurements
-    print("Setting baselines, please keep objects clear of sensor")
+    print("Setting baselines, please keep objects clear of sensors")
     time.sleep(1)
     meas.eFleshMeasure.setBaseline()
     meas.loadCellMeasure.tareSensor()

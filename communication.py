@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# Created by Bruce Davidson - Curtin University ID: 20796033
+# 
+# Created:       20th July 2026
+# Last Modified: 6th Aug 2026 (Bruce Davidson)
+#
+# \communication.py
+# This script handles serial communication with the CNC machine using gcode.
+
 import time
 import serial
 import json

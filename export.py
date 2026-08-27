@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+
+# Created by Bruce Davidson - Curtin University ID: 20796033
+# 
+# Created:       12th May 2026
+# Last Modified: 6th Aug 2026 (Bruce Davidson)
+# 
+# \export.py
+# This script handles exporting gcode to both the CNC machine's serial line and to the testing.gcode file for checking.
+
 import communication as comms
 
 gcode_filename = "testing.gcode"
