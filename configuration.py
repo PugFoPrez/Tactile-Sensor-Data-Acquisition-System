@@ -22,6 +22,11 @@ def readSettings():
         return settings
 
 def param(paramName):
+    """This functions returns the value for the specified parameter from the "settings.json" file.
+    
+    Returns:
+        String: Value of specified JSON parameter
+    """
     value = readSettings()
     # Recursively step through all keys in paramName (Nested JSON objects)
     for key in paramName.split("."):

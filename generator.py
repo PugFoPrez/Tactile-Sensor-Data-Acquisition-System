@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Created by Bruce Davidson - Curtin University ID: 20796033
-# 
+#
 # Created:       12th May 2026
 # Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
@@ -12,7 +12,6 @@
 # [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
 # [ ] Ground shielding cable
 # [ ] Store calibration
-# [ ] Configure settings properly
 
 from datetime import date
 import manipulation as mip
@@ -20,6 +19,7 @@ import export
 import numpy as np
 import measure as meas
 import time
+import json
 from rich.progress import Progress
 
 import terminal as term
@@ -43,7 +43,7 @@ task_probing = None
 def entryCode():
     """This functions initialises the state of the 3D printer for use in the project.
     Behaviour includes configuring the printer to use millimetres, as well as homing the printer.
-    """    
+    """
     mip.comment("G21 - Set units to millimetres")
     export.send("G21")
 
@@ -53,7 +53,7 @@ def entryCode():
 def probeGrid():
     """This function generates the point grid for the 3D printer to use in probing.
     It additionally loops through each of these points and sends the appropriate movement commands to the printer, as well saving data from the sensors.
-    """    
+    """
     pointsX = np.linspace(probingMin[ix], probingMax[ix], probingSteps[ix])
     pointsY = np.linspace(probingMin[iy], probingMax[iy], probingSteps[iy])
     pointsZ = np.linspace(probingMin[iz], probingMax[iz], probingSteps[iz])
@@ -110,7 +110,37 @@ def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
 
 def calibrate():
     """This function is used for the load cell calibration process, prompting the user for readings from the external scale.
-    """    
+    """
+
+    # Reuse previous calibration
+    usePrevious = False
+    print("Would you like to use a previous calibration setup (May not be accurate!) [Y/n]")
+    valid = False
+    while not valid:
+        try:
+            response = response().lower()
+            if response is "y" or response is "n":
+                valid = True
+                usePrevious = response == "y"
+        except:
+            print("")
+
+    # Check if a previous calibration actually exists
+    if usePrevious:
+        with open("calibration.json") as cal_json:
+            calibration = json.load(cal_json)
+            try:
+                mass = calibration["knownMass"]
+                reading = calibration["rawReading"]
+                meas.loadCellMeasure.calibrate(knownMass=mass, overrideRefVal=reading)
+                print("Calibration successfully loaded!")
+                return
+
+            except KeyError:
+                print("Calibration file is not able to be read, continuing with calibration.")
+                usePrevious = False
+
+    # CNC control for calibration
     term.setMode(charMode="hide")
     print("Please move the probe onto the temporary scale for calibration")
     print("e: Move up        (+z)")
@@ -140,16 +170,36 @@ def calibrate():
             break
     term.setMode(charMode="show")
 
+    # Store recorded measurement
     print("Please enter the recorded mass in kilograms like: \"1.04\"")
     valid = False
     while not valid:
         try:
-            recorded_mass = float(input())
+            recorded_mass = float(response())
             valid = True
         except:
             print("Invalid input")
 
     meas.loadCellMeasure.calibrate(recorded_mass)
+
+    # Save calibration to file
+    print("Save this calibration? [Y/n]")
+    valid = False
+    saveCal = False
+    while not valid:
+        try:
+            response = response().lower()
+            if response is "y" or response is "n":
+                valid = True
+                saveCal = response == "y"
+        except:
+            print("")
+    if saveCal:
+        calFile = open("calibration.json", "w")
+        calibration = {"knownMass": recorded_mass, 
+                       "rawReading": meas.loadCellMeasure.reading_ref}
+        json.dump(calibration, calFile)
+        calFile.close()
 
     return
 

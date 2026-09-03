@@ -128,7 +128,7 @@ class loadCellMeasure:
     mass_ref = float('inf')
 
     @classmethod
-    def initSensor(cls, port=defaultPort):
+    def initSensor(cls, port):
         """Initialise the serial communication with the specified USB port.
 
         Args:
@@ -149,7 +149,7 @@ class loadCellMeasure:
         cls.reading_tare = cls.sampleRawVal(numSamples)
 
     @classmethod
-    def calibrate(cls, knownMass, numSamples=20):
+    def calibrate(cls, knownMass, numSamples=20, overrideRefVal=None):
         """Calibrate the sensor using the tare and reference readings.
 
         Args:
@@ -157,7 +157,10 @@ class loadCellMeasure:
             numSamples (int, optional): How many samples to average over. Defaults to 20.
         """        
         cls.mass_ref = knownMass
-        cls.reading_ref = cls.sampleRawVal(numSamples)
+        if overrideRefVal is None:
+            cls.reading_ref = cls.sampleRawVal(numSamples)
+        else:
+            cls.reading_ref = overrideRefVal
 
     @classmethod
     def sampleRawVal(cls, numSamples=5):
