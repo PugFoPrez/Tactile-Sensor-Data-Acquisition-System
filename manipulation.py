@@ -3,20 +3,21 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 # 
 # Created:       12th May 2026
-# Last Modified: 6th Aug 2026 (Bruce Davidson)
+# Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
-# \manipulation.py
+# manipulation.py
 # This script handles formatting of CNC machine behaviours into appropriate gcode commands.
 
 import export
 import math
+import configuration as conf
 
-hopHeight = 5
-feedrateXY = 10000
-feedrateZ = 600
+hopHeight = conf.param("cnc.hopHeight")
+feedrateXY = conf.param("cnc.feedrate.XY")
+feedrateZ = conf.param("cnc.feedrate.Z")
 
-sysMin = [0, 0, 0]
-sysMax = [210, 210, 210]
+sysMin = conf.param("cnc.min")
+sysMax = conf.param("cnc.max")
 
 def comment(text):
     """This formats and adds the provided text as a gcode comment, and then exports it.
@@ -28,13 +29,13 @@ def comment(text):
 
 def move(x, y, z, rel=False, hop=True):
     """This function moves the toolhead to the specified position, either relative to the current position or to an absolute position.
-    A hop is by default enabled to ensure that it does slide the toolhead along flat surfaces.
+    A hop is by default enabled to ensure that it doesn't drag the toolhead along flat surfaces.
 
     Args:
         x (float): The destination X position
         y (float): The destination Y position
         z (float): The destination Z position
-        rel (bool, optional): Whether the movement should be done relative to the toolheads position (True) or done in absolute positioning (False). Defaults to False.
+        rel (bool, optional): Whether the movement should be done relative to the toolhead's position (True) or done in absolute positioning (False). Defaults to False.
         hop (bool, optional): Whether a hop should be enabled for the movement. Defaults to True.
     """
     if hop:

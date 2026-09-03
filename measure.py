@@ -3,9 +3,9 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 # 
 # Created:       21th July 2026
-# Last Modified: 6th Aug 2026 (Bruce Davidson)
+# Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
-# \measure.py
+# measure.py
 # This script handles the zeroing, calibration, and measurement of the eFlesh sensor and load cell.
 
 # Below is adapted from the viz_eflesh.py codes
@@ -21,10 +21,10 @@ import argparse
 import serial
 import csv
 from datetime import datetime
+import configuration as conf
 
-defaultPort = "/dev/ttyACM0"
-
-data_filename = "measurements/meas_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".csv"
+data_prefix = conf.param("output.measFilePrefix")
+data_filename = "measurements/" + data_prefix + "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".csv"
 
 class measurement:
     """Measurement class for 3D printer positioning, load cell value, and eFlesh magnetometer values
@@ -62,7 +62,7 @@ class eFleshMeasure:
     ef_baseline = None
 
     @classmethod
-    def initStreaming(cls, port=defaultPort):
+    def initStreaming(cls, port):
         """Configure streaming to the eFlesh AnySkin board.
 
         Args:

@@ -1,9 +1,19 @@
 {
-    "port": "/dev/ttyUSB0",
-    "baud": "115200",
-    "output_file": "output.csv",
-    "points_x": 3,
-    "points_y": 3,
-    "dist_x": 50,
-    "dist_y": 40
+    "comms": {
+        "eFleshPort":   "/dev/ttyACM0",
+        "loadCellPort": "/dev/ttyACM1",
+        "cncPort":      "/dev/ttyUSB0",
+        "baud": "115200",
+        "disableCncComms": false
+    },
+    "cnc": {
+        "min": {"X":0, "Y":0, "Z":0},
+        "max": {"X":210, "Y":210, "Z":210},
+        "hopHeight": 5,
+        "feedrate": {"XY":10000, "Z":600}
+    },
+    "output": {
+        "gcodeFile": "testing.gcode",
+        "measFilePrefix": "meas"
+    }
 }

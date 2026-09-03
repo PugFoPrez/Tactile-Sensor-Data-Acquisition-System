@@ -5,7 +5,7 @@
 # Created:       4th Aug 2026
 # Last Modified: 6th Aug 2026 (Bruce Davidson)
 #
-# \terminal.py
+# terminal.py
 # This script handles getting user input from the terminal and changing terminal behaviour.
 
 import sys

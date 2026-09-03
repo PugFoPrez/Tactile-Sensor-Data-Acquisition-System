@@ -3,33 +3,14 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 # 
 # Created:       12th May 2026
-# Last Modified: 27th Aug 2026 (Bruce Davidson)
+# Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
-# \generator.py
+# generator.py
 # This script is used to generate gcode used for probing of a tactile sensor for data acquisition.
 
 # TODO
-# [X] Look into separation of G90 and G91 commands
-# [X] Separate move to allow for X, Y and Z moves individually
-#     (without relying on relative move) - Use None arg or optional args
-# [ ] For upward move: Z then XY, for downward move XY then Z - decide if this should be general in manipulation code or just assumed by user
-# [X] Integrate into sensor acquisition system
-#     (might need time at bottom point to get measurement)
-# [ ] Consider sensor hysteresis on waiting for next movement
-# [X] Implement progress commands
-# [X] Documentation
-# [ ] Option for multiple sensors to be placed on the same bed - overnight batch testing
-#     Issues with how to read multiple bits of data
-#     Current sensor setups only assume that one sensor is connected at a time
-# [ ] GUI to make setting parameters easier and view points/path
-# [ ] Allow for slanted & non-planar top surfaces to be specified
-# [ ] Bounds check before movement to prevent collisions
-# [X] Modify for serial communication and not gcode file creation
-
-# [x] Improve calibration setup (Ask for user request)
 # [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
-# [x] Write to csv file
-# [ ] Insulate shielding cable
+# [ ] Ground shielding cable
 # [ ] Store calibration
 # [ ] Configure settings properly
 
@@ -42,6 +23,7 @@ import time
 from rich.progress import Progress
 
 import terminal as term
+import configuration as conf
 
 ix = 0
 iy = 1
@@ -179,9 +161,11 @@ def main():
 
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
 
+    # Load default settings
+
     # Start streaming data
-    meas.eFleshMeasure.initStreaming(port="/dev/ttyACM0")
-    meas.loadCellMeasure.initSensor(port="/dev/ttyACM1")
+    meas.eFleshMeasure.initStreaming(port=conf.param("comms.eFleshPort"))
+    meas.loadCellMeasure.initSensor(port=conf.param("comms.loadCellPort"))
     meas.measurements = []
 
     mip.home()

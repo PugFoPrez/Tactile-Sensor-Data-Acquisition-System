@@ -44,7 +44,7 @@ The eFlesh magnetometer board will first need to be connected to the supported m
 
 The microcontroller code must now be uploaded to the QT Py board which is done following the process described by the [ReSkin Arduino Guide](https://github.com/raunaqbhirangi/reskin_sensor/tree/main/arduino). The ReSkin-Arduino Git repository will need to be downloaded. Note that this will require the Arduino IDE to be installed. Please follow steps on [this page](https://learn.adafruit.com/adafruit-qt-py/arduino-ide-setup) for installation of the Arduino IDE, and steps on [this page](https://learn.adafruit.com/adafruit-qt-py/using-with-arduino-ide) for flashing code onto the QT Py board. One point of note is that the "TinyUSB" option needed to be selected under Tools > USB Stack menu in the Arduino IDE for compilation to work.
 
-#todo note done what codes were used from the repo and the issues with getting the MLX90393 library working.
+#todo note down what codes were used from the repo and the issues with getting the MLX90393 library working.
 
 #### Load Cell
 
@@ -109,9 +109,9 @@ The final load cell configuration is shown below.
 ## Running the script
 Configuring the script is subject to change as it is developed.
 
-Currently each Python script has variables at the the head of each file which can be configured. These are mostly self explanatory. In general, `manipulation.py` has constants that configure the specifications and constraints related to the CNC machine, and `generator.py` variables that control the probing behaviour of the script. An important note is that `communication.py` has a boolean for disabling serial communication - this is useful for developing purposes so that access to a CNC machine isn't needed.
+Most settings for the data acquisition script are stored in the `settings.json` file and should be self explanatory. Probing related settings are kept in the `generator.py` file as they are are subject to change depending on the probing implementation programmed by the user. Explanations of the settings file are given in the [settings file](#the-settings-file)
 
-In `generator.py`, the ports of the load cell and eFlesh sensor should be set in the main function. The main function will also be were different probing method should be written as code - a grid based approach has been provided to be used as a template.
+In `generator.py` the main function will be were different probing method should be written as code - a grid based approach as well as a single normal force approach has been provided to be used as a template.
 
 The position of the sensor relative to the machine's home position will also need to be set. This can be accomplished by using the machine's control panel to move the probing head to the top, south-western most (left of, and closest to the user) point of the sensor. Note for the eFlesh sensor that some margin was used in the original paper's design for the 'active' area of the sensor.
 
@@ -137,3 +137,25 @@ Configuration:
 
 Other files:
 - `requirements.txt`: Listing of all required packages for the script.
+
+### The Settings File
+#### Communications Settings
+The communications settings related to the serial communication between the eFlesh sensor, load cell, and the CNC machine.
+
+The port related settings should be entered as `"/dev/<PORTNAME>"`, where the port name can be found using the process described in the [sensor setup](#setting-up-the-sensors) section.
+
+The baud rate should not need to be changed from the set value of 115,200.
+
+The `disableCncComms` parameter is useful for development purposes where the CNC machine is not physically available. For actual data acquisition, it MUST be set to `false`, otherwise no actual probing will occur.
+
+#### CNC Settings
+The min XYZ and max XYZ parameters should correspond to the CNC machines minimum and maximum bounds.
+
+The hop height sets how far the machine head should 'hop' upwards between movements (if a hop is required).
+
+The feedrate XY and Z parameters describe how quickly the CNC machine can move in each axis direction. The values of XY at 10,000 and Z at 600 have been set based on an Ender 3 V2 machine.
+
+#### Output Settings
+The gcode file is where a copy of the gcode commands get stored for later reference.
+
+The measurement file prefix will be used to prefix all measurement files and should be changed if the user wants to differentiate measurements. All measurement files will be placed in the measurements folder, and will be named like: `<PREFIX>_2026-08-04 16:11:58.csv`
