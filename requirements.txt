@@ -5,7 +5,7 @@ rich
 # Terminal Communication
 readchar
 # Device Communication
-serial
+pyserial
 anyskin
 reskin_sensor
 argparse
