@@ -28,7 +28,7 @@ def initSerial():
         return
 
     print("Connecting to serial...")
-    s = serial.Serial(conf.param("cncPort"), conf.param("comms.baud"), timeout=30)
+    s = serial.Serial(conf.param("comms.cncPort"), conf.param("comms.baud"), timeout=30)
 
     s.write("\r\n\r\n".encode())  # Wake up serial device
     time.sleep(2)   # Wait for initialisation

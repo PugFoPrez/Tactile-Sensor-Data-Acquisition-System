@@ -11,7 +11,7 @@
 # TODO
 # [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
 # [ ] Ground shielding cable
-# [ ] Store calibration
+# [ ] Check how eFlesh measurements are vs should be read/stored
 
 from datetime import date
 import manipulation as mip
@@ -115,11 +115,13 @@ def calibrate():
     # Reuse previous calibration
     usePrevious = False
     print("Would you like to use a previous calibration setup (May not be accurate!) [Y/n]")
+    term.setMode(charMode="show")
     valid = False
     while not valid:
+        response = term.getch()
+        response = response.lower()
         try:
-            response = response().lower()
-            if response is "y" or response is "n":
+            if response == "y" or response == "n":
                 valid = True
                 usePrevious = response == "y"
         except:
@@ -127,17 +129,22 @@ def calibrate():
 
     # Check if a previous calibration actually exists
     if usePrevious:
-        with open("calibration.json") as cal_json:
-            calibration = json.load(cal_json)
+        with open("calibration.json", mode="r") as cal_json:
             try:
+                calibration = json.load(cal_json)
                 mass = calibration["knownMass"]
                 reading = calibration["rawReading"]
                 meas.loadCellMeasure.calibrate(knownMass=mass, overrideRefVal=reading)
                 print("Calibration successfully loaded!")
                 return
 
-            except KeyError:
+            except FileNotFoundError:
+                print("Calibration file could not be found, continuing with calibration.")
+                time.sleep(0.25)
+                usePrevious = False
+            except:
                 print("Calibration file is not able to be read, continuing with calibration.")
+                time.sleep(0.25)
                 usePrevious = False
 
     # CNC control for calibration
@@ -153,7 +160,6 @@ def calibrate():
 
     while True:
         char = term.getch()
-
         if char == "e": # Move up
             mip.move(0, 0, 0.5, rel=True, hop=False)
         elif char == "q": # Move down
@@ -175,7 +181,7 @@ def calibrate():
     valid = False
     while not valid:
         try:
-            recorded_mass = float(response())
+            recorded_mass = float(input())
             valid = True
         except:
             print("Invalid input")
@@ -184,12 +190,14 @@ def calibrate():
 
     # Save calibration to file
     print("Save this calibration? [Y/n]")
+    term.setMode(charMode="show")
     valid = False
     saveCal = False
     while not valid:
+        response = term.getch()
+        response = response.lower()
         try:
-            response = response().lower()
-            if response is "y" or response is "n":
+            if response == "y" or response == "n":
                 valid = True
                 saveCal = response == "y"
         except:
@@ -211,23 +219,22 @@ def main():
 
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
 
-    # Load default settings
-
     # Start streaming data
     meas.eFleshMeasure.initStreaming(port=conf.param("comms.eFleshPort"))
     meas.loadCellMeasure.initSensor(port=conf.param("comms.loadCellPort"))
     meas.measurements = []
 
-    mip.home()
+    # mip.home()
+    # mip.move(0, 0, 10, rel=False, hop=False)
 
     # Set baselines measurements
     print("Setting baselines, please keep objects clear of sensors")
-    time.sleep(1)
+    # time.sleep(1)
     meas.eFleshMeasure.setBaseline()
     meas.loadCellMeasure.tareSensor()
 
     # Calibrating load cell
-    mip.move(10, 10, 20, hop=False)
+    # mip.move(10, 10, 20, hop=False)
     calibrate()
     time.sleep(1)
 

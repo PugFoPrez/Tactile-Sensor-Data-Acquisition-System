@@ -162,6 +162,10 @@ class loadCellMeasure:
         else:
             cls.reading_ref = overrideRefVal
 
+        # Check for errors in reference value reading
+        # if cls.reading_ref == 0:
+            # raise ValueError("Reference reading for the load cell was 0 which is not allowed.")
+
     @classmethod
     def sampleRawVal(cls, numSamples=5):
         """Read the raw ADC values from the load cell sensor.

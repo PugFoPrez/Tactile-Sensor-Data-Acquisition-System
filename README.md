@@ -130,7 +130,7 @@ Python scripts:
 - `generator.py`: This is the main script used to configure the probing behaviour of the script.
 - `manipulation.py`: This script handles formatting of CNC machine behaviours into appropriate gcode commands.
 - `measure.py`: This script handles the zeroing, calibration, and measurement of the eFlesh sensor and load cell.
-- `terminal.py`: This script handles getting user input from the terminal and changing terminal behaviour.
+- `terminal.py`: This script handles getting user input from the terminal and changing terminal behaviour. Note that the behaviours in this script may cause the user's terminal to not display anything (If the display mode is never reset). This can be fixed by running `reset` in the terminal.
 
 Configuration:
 - `settings.json`: User defined settings to be used to configure communication and probing behaviour.

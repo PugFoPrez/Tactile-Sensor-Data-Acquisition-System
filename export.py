@@ -11,7 +11,7 @@
 import communication as comms
 import configuration as conf
 
-gcode_filename = conf.param("gcodeFile")
+gcode_filename = conf.param("output.gcodeFile")
 gcodeFile = open(gcode_filename, "w")
 
 def send(text):
