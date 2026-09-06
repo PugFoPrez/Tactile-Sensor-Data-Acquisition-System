@@ -159,3 +159,8 @@ The feedrate XY and Z parameters describe how quickly the CNC machine can move i
 The gcode file is where a copy of the gcode commands get stored for later reference.
 
 The measurement file prefix will be used to prefix all measurement files and should be changed if the user wants to differentiate measurements. All measurement files will be placed in the measurements folder, and will be named like: `<PREFIX>_2026-08-04 16:11:58.csv`
+
+## Tricks and Tips
+- The order of connection determines whether a USB device appears as `ACM0` or `ACM1`, connecting devices in the same order each time will prevent having to change settings on every iteration.
+- The eFlesh sensor's status can be confirmed by using the visualiser script available from the eFlesh repository. This takes some set up to get running.
+- The load cell's status can be confirmed by checking the serial output using a tool like `minicom` on Linux.
