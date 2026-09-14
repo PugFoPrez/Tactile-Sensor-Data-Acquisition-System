@@ -83,6 +83,16 @@ class eFleshMeasure:
             cls.sensorStream.join()
 
     @classmethod
+    def sampleRawVector(cls, numSamples=5):
+        """Read and average raw sensor vectors. Also reshapes and axis-flips data as done in original eFlesh codes."""
+        data = cls.sensorStream.get_data(num_samples=numSamples)
+        data = np.array(data)[:, 1:]
+        data = np.mean(data, axis=0)
+        data = data.reshape(-1, 3)
+        data[:, :2] *= -1  # Flip x and y axes
+        return data  # shape (5, 3)
+
+    @classmethod
     def sampleSensor(cls, numSamples=5):
         """Read the current values of the eFlesh sensor.
 
@@ -93,19 +103,12 @@ class eFleshMeasure:
             float list: eFlesh board measurements for each magnetometer
         """
         if cls.sensorStream is None:
-            eFleshMeasure.initStreaming()
+            raise RuntimeError("Sensor has not yet been initialised, please run the initStreaming() function from eFleshMeasure class")
 
-        data = cls.sensorStream.get_data(num_samples=numSamples)
-        data = np.array(data)[:, 1:]
-        data = np.mean(data, axis=0)
-
-        data = data.reshape(-1, 3)
-        data[:, :2] *= -1 # Flip x and y axes
-        data_mag = np.linalg.norm(data, axis=1)
-        # data_flat = data.flatten()
-        # norm = np.linalg.norm(data_flat)
-
-        return data_mag
+        data = cls.sampleRawVector(numSamples=numSamples)
+        if cls.ef_baseline is not None:
+            data = data - cls.ef_baseline
+        return data.flatten()
 
     @classmethod
     def setBaseline(cls, numSamples=20):
@@ -115,7 +118,7 @@ class eFleshMeasure:
         Args:
             numSamples (int, optional): The number of samples to average over. Defaults to 20.
         """
-        cls.ef_baseline = eFleshMeasure.sampleSensor(numSamples=numSamples)
+        cls.ef_baseline = cls.sampleRawVector(numSamples=numSamples)
 
 class loadCellMeasure:
     """Class of load cell measuring functions
@@ -215,8 +218,7 @@ def saveData(pos):
         pos (Tuple of (X, Y, Z)): Position of the tool head
     """
     # Get eFlesh measurements
-    ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
-    ef_val = ef_sensorData - eFleshMeasure.ef_baseline
+    ef_val = eFleshMeasure.sampleSensor(numSamples=3)
 
     # Get load cell measurements
     lc_sensorData = loadCellMeasure.sampleSensor(numSamples=3)
@@ -233,8 +235,13 @@ def appendData(measurement, filename=data_filename):
     """
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    fieldnames = ["X", "Y", "Z", "LoadCell(kg)", "eFlesh1", "eFlesh2", "eFlesh3", "eFlesh4", "eFlesh5"]
-
+    fieldnames = ["X", "Y", "Z", "LoadCell(kg)",
+                "eFlesh1_x", "eFlesh1_y", "eFlesh1_z",
+                "eFlesh2_x", "eFlesh2_y", "eFlesh2_z",
+                "eFlesh3_x", "eFlesh3_y", "eFlesh3_z",
+                "eFlesh4_x", "eFlesh4_y", "eFlesh4_z",
+                "eFlesh5_x", "eFlesh5_y", "eFlesh5_z"]
+    
     if not os.path.isfile(filename):
         data_file = open(filename, "+w", newline="")
         writer = csv.DictWriter(data_file, fieldnames=fieldnames)

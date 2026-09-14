@@ -165,3 +165,4 @@ The measurement file prefix will be used to prefix all measurement files and sho
 - The eFlesh sensor's status can be confirmed by using the visualiser script available from the eFlesh repository. This takes some set up to get running.
 - The load cell's status can be confirmed by checking the serial output using a tool like `minicom` on Linux.
 - The use of the script and it's user input functions may cause the terminal to not return to its normal state, causing characters to not appear on the screen. This can be fixed by typing `reset` into the terminal, or closing and re-opening the terminal.
+- If the output measurements data seems to not be coming in properly (e.g., constant values or all zeroes), unplugging the USB cables from the computer as well as from the microcontroller and plugging them back in may resolve it.
