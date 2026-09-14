@@ -2,6 +2,7 @@
 datetime
 numpy
 rich
+wakepy
 # Terminal Communication
 readchar
 # Device Communication

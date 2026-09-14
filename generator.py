@@ -10,8 +10,9 @@
 
 # TODO
 # [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
-# [ ] Ground shielding cable
 # [ ] Check how eFlesh measurements are vs should be read/stored
+# [ ] Improve terminal UI/UX
+# [ ] Sanity check data from sensors before running script
 
 from datetime import date
 import manipulation as mip
@@ -21,6 +22,7 @@ import measure as meas
 import time
 import json
 from rich.progress import Progress
+from wakepy import keep
 
 import terminal as term
 import configuration as conf
@@ -30,12 +32,12 @@ iy = 1
 iz = 2
 
 # Probing Offset corresponds to the topmost SW surface of the sensor
-probingOffset = [102.5, 102.5, 28.5]
+probingOffset = [96.0, 98.0, 28.0]
 # Where to start and end probing
-probingMin = [0, 0, -1]
-probingMax = [30, 30, -5]
+probingMin = [0, 0, -5]
+probingMax = [25, 25, -10]
 # Amount of samples to probe in between each axis
-probingSteps = [3, 3, 1]
+probingSteps = [3, 3, 2]
 
 progressBar = None
 task_probing = None
@@ -209,6 +211,16 @@ def calibrate():
         json.dump(calibration, calFile)
         calFile.close()
 
+    # Wait for user to remove scale from bed
+    mip.move(0, 0, 50, rel=True, hop=False)
+    print("Please replace the scale with the eFlesh sensor.\nOnce complete, enter 'f' to continue...")
+    valid = False
+    while not valid:
+        response = term.getch()
+        response = response.lower()
+        if response == "f":
+            valid = True
+
     return
 
 def main():
@@ -224,19 +236,18 @@ def main():
     meas.loadCellMeasure.initSensor(port=conf.param("comms.loadCellPort"))
     meas.measurements = []
 
-    # mip.home()
-    # mip.move(0, 0, 10, rel=False, hop=False)
+    mip.home()
+    mip.move(0, 0, 10, rel=False, hop=False)
 
     # Set baselines measurements
     print("Setting baselines, please keep objects clear of sensors")
-    # time.sleep(1)
+    time.sleep(1)
     meas.eFleshMeasure.setBaseline()
     meas.loadCellMeasure.tareSensor()
 
     # Calibrating load cell
-    # mip.move(10, 10, 20, hop=False)
+    mip.move(10, 10, 20, hop=False)
     calibrate()
-    time.sleep(1)
 
     # Begin writing gcode
     print("Entry Code")
@@ -246,8 +257,9 @@ def main():
     progressBar = Progress()
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
-    # probeGrid()
-    probeNormalForce()
+    with keep.running(): # Prevent CPU suspend mid probing
+        probeGrid()
+        # probeNormalForce()
     mip.setProgress(100)
     progressBar.stop()
 

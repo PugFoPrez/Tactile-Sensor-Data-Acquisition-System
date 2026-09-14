@@ -164,3 +164,4 @@ The measurement file prefix will be used to prefix all measurement files and sho
 - The order of connection determines whether a USB device appears as `ACM0` or `ACM1`, connecting devices in the same order each time will prevent having to change settings on every iteration.
 - The eFlesh sensor's status can be confirmed by using the visualiser script available from the eFlesh repository. This takes some set up to get running.
 - The load cell's status can be confirmed by checking the serial output using a tool like `minicom` on Linux.
+- The use of the script and it's user input functions may cause the terminal to not return to its normal state, causing characters to not appear on the screen. This can be fixed by typing `reset` into the terminal, or closing and re-opening the terminal.
