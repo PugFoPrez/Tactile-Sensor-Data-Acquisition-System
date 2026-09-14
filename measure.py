@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Created by Bruce Davidson - Curtin University ID: 20796033
-# 
+#
 # Created:       21th July 2026
 # Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
@@ -131,19 +131,19 @@ class loadCellMeasure:
 
         Args:
             port (string): Which USB port to set up serial communication on.
-        """        
+        """
         cls.srl = serial.Serial(port, 9600, timeout=1)
         time.sleep(0.1)
         cls.srl.reset_input_buffer()
 
     @classmethod
     def tareSensor(cls, numSamples=20):
-        """Set the zero value of the sensor. 
+        """Set the zero value of the sensor.
         Note that unlike the eFlesh sensor, this tare value is accounted for when using sampleSensor().
 
         Args:
             numSamples (int, optional): The number of samples to average over. Defaults to 20.
-        """        
+        """
         cls.reading_tare = cls.sampleRawVal(numSamples)
 
     @classmethod
@@ -153,7 +153,7 @@ class loadCellMeasure:
         Args:
             knownMass (_type_): The reference mass reading (in kg) that was recorded during calibration.
             numSamples (int, optional): How many samples to average over. Defaults to 20.
-        """        
+        """
         cls.mass_ref = knownMass
         if overrideRefVal is None:
             cls.reading_ref = cls.sampleRawVal(numSamples)
@@ -173,7 +173,7 @@ class loadCellMeasure:
 
         Returns:
             _type_: _description_
-        """        
+        """
         #TODO num samples - below is Claude generated - TODO verify
         cls.srl.reset_input_buffer()  # discard stale backlog first
         # Throw away one line, since it may have been mid-transmission when we flushed
@@ -201,7 +201,7 @@ class loadCellMeasure:
 
         Returns:
             _type_: _description_
-        """        
+        """
         raw = cls.sampleRawVal(numSamples=numSamples)
 
         fraction_of_ref_mass = (raw - cls.reading_tare) / (cls.reading_ref - cls.reading_tare)
@@ -213,7 +213,7 @@ def saveData(pos):
 
     Args:
         pos (Tuple of (X, Y, Z)): Position of the tool head
-    """    
+    """
     # Get eFlesh measurements
     ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
     ef_val = ef_sensorData - eFleshMeasure.ef_baseline
@@ -235,8 +235,12 @@ def appendData(measurement, filename=data_filename):
 
     fieldnames = ["X", "Y", "Z", "LoadCell(kg)", "eFlesh1", "eFlesh2", "eFlesh3", "eFlesh4", "eFlesh5"]
 
-    with open(filename, "+a", newline="") as data_file:
+    if not os.path.isfile(filename):
+        data_file = open(filename, "+w", newline="")
         writer = csv.DictWriter(data_file, fieldnames=fieldnames)
-        if not os.path.isfile(filename): # New set of measurements, requires header
-            writer.writeheader()
-        writer.writerow(measurement.flatten(fieldnames))
+        writer.writeheader() # New set of measurements, requires header
+    else:
+        data_file = open(filename, "+a", newline="")
+        writer = csv.DictWriter(data_file, fieldnames=fieldnames)
+
+    writer.writerow(measurement.flatten(fieldnames))
