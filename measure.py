@@ -53,8 +53,6 @@ class measurement:
         values = list(self.position) + [self.loadCell] + list(self.eFlesh)
         return dict(zip(fieldnames, values))
 
-measurements = []
-
 class eFleshMeasure:
     """Class of eFlesh measuring related functions.
     """
@@ -66,7 +64,7 @@ class eFleshMeasure:
         """Configure streaming to the eFlesh AnySkin board.
 
         Args:
-            port (string, optional): The USB port the eFlesh board is connected to. Defaults to defaultPort.
+            port (string): The USB port the eFlesh board is connected to.
         """
         # Begin streaming with sensor
         cls.sensorStream = AnySkinProcess(
@@ -132,7 +130,7 @@ class loadCellMeasure:
         """Initialise the serial communication with the specified USB port.
 
         Args:
-            port (string, optional): Which USB port to set up serial communication on. Defaults to defaultPort.
+            port (string): Which USB port to set up serial communication on.
         """        
         cls.srl = serial.Serial(port, 9600, timeout=1)
         time.sleep(0.1)
@@ -211,7 +209,7 @@ class loadCellMeasure:
         return mass
 
 def saveData(pos):
-    """Saves the current readings from the eFlesh sensor and load cell sensor, as well as the provided position to the global measurements list.
+    """Saves the current readings from the eFlesh sensor and load cell sensor, as well as the provided position to the measurements file.
 
     Args:
         pos (Tuple of (X, Y, Z)): Position of the tool head
@@ -219,27 +217,26 @@ def saveData(pos):
     # Get eFlesh measurements
     ef_sensorData = eFleshMeasure.sampleSensor(numSamples=3)
     ef_val = ef_sensorData - eFleshMeasure.ef_baseline
-    # print(f"Measured EF: {ef_val}")
 
     # Get load cell measurements
     lc_sensorData = loadCellMeasure.sampleSensor(numSamples=3)
-    # print(f"Measured LC: {lc_sensorData}")
 
     # Save measurements
-    measurements.append(measurement(position=pos, eFlesh=ef_val, loadCell=lc_sensorData))
+    appendData(measurement(position=pos, eFlesh=ef_val, loadCell=lc_sensorData))
 
-def writeData(filename=data_filename):
+def appendData(measurement, filename=data_filename):
     """Writes the stored measurement data to the specified file in CSV format.
 
     Args:
+        measurements (measurement object): The readings to append to the measurements file.
         filename (string, optional): The name of the file to save the sensor measurements to. Defaults to data_filename.
-    """    
+    """
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     fieldnames = ["X", "Y", "Z", "LoadCell(kg)", "eFlesh1", "eFlesh2", "eFlesh3", "eFlesh4", "eFlesh5"]
 
-    with open(filename, "w", newline="") as data_file:
+    with open(filename, "+a", newline="") as data_file:
         writer = csv.DictWriter(data_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for measurement in measurements:
-            writer.writerow(measurement.flatten(fieldnames))
+        if not os.path.isfile(filename): # New set of measurements, requires header
+            writer.writeheader()
+        writer.writerow(measurement.flatten(fieldnames))
