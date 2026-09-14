@@ -6,3 +6,4 @@ testing.gcode
 LOADCELLSAVE_code.py
 measurements/*
 calibration.json
+ignore_*.py

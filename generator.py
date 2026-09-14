@@ -116,7 +116,7 @@ def calibrate():
 
     # Reuse previous calibration
     usePrevious = False
-    print("Would you like to use a previous calibration setup (May not be accurate!) [Y/n]")
+    print("Would you like to use a previous calibration setup (May not be accurate!) [y/N]")
     term.setMode(charMode="show")
     valid = False
     while not valid:
@@ -246,7 +246,7 @@ def main():
     meas.loadCellMeasure.tareSensor()
 
     # Calibrating load cell
-    mip.move(10, 10, 20, hop=False)
+    mip.move(0, 0, 30, hop=False)
     calibrate()
 
     # Begin writing gcode
@@ -264,13 +264,10 @@ def main():
     progressBar.stop()
 
     print("Probing Completed")
-    mip.home()
+    mip.move(0, 0, 75)
 
     # Stop streaming data
     meas.eFleshMeasure.stopStreaming()
-
-    # Write data
-    meas.writeData()
 
 if __name__ == "__main__":
     # Standard check to ensure script is run directly
