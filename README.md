@@ -55,7 +55,7 @@ Load cell to ADC:
 - Green wire (Signal +) to the `A+` terminal
 - White wire (Signal -) to the `A-` terminal
 - Black wire (Excitation -) to the `E-` terminal
-- Note that the load cell came with a yellow wire (assumed to be a shielding wire) which was left disconnected. #todo figure out yellow wire
+- Note that the load cell came with a yellow wire which was taken to be a shielding wire. This was connected to the `GND` terminal of the ADC.
 
 ADC to Microcontroller:
 - `Vin` terminal to the `3.3V` terminal
@@ -98,8 +98,11 @@ while True:
 
 The primary setup of the load cell has now been completed. The following steps briefly describe additions made to the load cell for probing of the eFlesh sensor.
 
+#todo update below section with new changes
 A 3D printed probing tip needs to be attached to the load cell so that it can properly interact with the eFlesh sensor and excite the load cell. The load cell is to be placed into the previously mentioned load cell holder 'upside down', i.e., with the small dimple facing upwards and flat side facing downwards. The 3D printed tip was then attached using Blu-Tack to the flat face. This setup provides a good interface for adhering the tip to the load cell while allowing the load cell dimple to press onto the printed holder for accurate force measurement. To ensure the load cell remains inside the holder, some sticky tape was applied over the exposed load cell side/load cell holder #todo better way to hold it in?
 
+#todo mention standard design requirements for probe tip and standard probe height
+#todo show schematic drawings of the round and flat designs already made
 #todo something something load cell probe tip
 
 The final load cell configuration is shown below.
