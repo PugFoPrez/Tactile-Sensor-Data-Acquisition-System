@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       20th July 2026
-# Last Modified: 3rd Sep 2026 (Bruce Davidson)
+# Last Modified: 6th Sep 2026 (Bruce Davidson)
 #
 # communication.py
 # This script handles serial communication with the CNC machine using gcode.

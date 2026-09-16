@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       21th July 2026
-# Last Modified: 3rd Sep 2026 (Bruce Davidson)
+# Last Modified: 14th Sep 2026 (Bruce Davidson)
 #
 # measure.py
 # This script handles the zeroing, calibration, and measurement of the eFlesh sensor and load cell.

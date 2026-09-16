@@ -3,16 +3,15 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       12th May 2026
-# Last Modified: 3rd Sep 2026 (Bruce Davidson)
+# Last Modified: 16th Sep 2026 (Bruce Davidson)
 #
 # generator.py
 # This script is used to generate gcode used for probing of a tactile sensor for data acquisition.
 
 # TODO
 # [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
-# [ ] Check how eFlesh measurements are vs should be read/stored
 # [ ] Improve terminal UI/UX
-# [ ] Sanity check data from sensors before running script
+# [ ] Sanity check data from sensors before running script?
 
 from datetime import date
 import manipulation as mip
@@ -32,12 +31,12 @@ iy = 1
 iz = 2
 
 # Probing Offset corresponds to the topmost SW surface of the sensor
-probingOffset = [96.0, 98.0, 28.0]
+probingOffset = [96.0, 92.0, 28.0]
 # Where to start and end probing
 probingMin = [0, 0, -5]
 probingMax = [25, 25, -10]
 # Amount of samples to probe in between each axis
-probingSteps = [3, 3, 2]
+probingSteps = [10, 10, 5]
 
 progressBar = None
 task_probing = None
