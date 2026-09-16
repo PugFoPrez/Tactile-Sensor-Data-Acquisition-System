@@ -65,27 +65,28 @@ def probeGrid():
     progressBar.start()
 
     for x in pointsX:
+        xx = x + probingOffset[ix]
         for y in pointsY:
+            yy = y + probingOffset[iy]
+            # Move to point above
+            mip.move(xx, yy, probingOffset[iz] + 5)
             for z in pointsZ:
-                xx = x + probingOffset[ix]
-                yy = y + probingOffset[iy]
                 zz = z + probingOffset[iz]
                 mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
                             f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
-                # Move to point above
-                mip.move(xx, yy, probingOffset[iz] + 5)
+                # Probe point
                 mip.move(xx, yy, zz, hop=False)
                 mip.dwell(0.25)
                 # Save measurements
                 meas.saveData([x,y,z])
                 mip.dwell(0.25)
-                # Move on
-                mip.move(xx, yy, probingOffset[iz], hop=False)
 
                 # Set progress
                 step = step + 1
                 mip.setProgress(step / stepTotal * 100)
                 progressBar.update(task_probing, advance=1)
+            # Move to next XY point
+            mip.move(xx, yy, probingOffset[iz], hop=False)
 
 def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
     """This function probes the center of the sensor to determine normal force values.
