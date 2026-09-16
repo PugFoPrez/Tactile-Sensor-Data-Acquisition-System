@@ -236,7 +236,9 @@ def main():
     meas.loadCellMeasure.initSensor(port=conf.param("comms.loadCellPort"))
     meas.measurements = []
 
-    mip.home()
+    # Begin gcode control
+    print("Entry Code")
+    entryCode()
     mip.move(0, 0, 10, rel=False, hop=False)
 
     # Set baselines measurements
@@ -248,10 +250,6 @@ def main():
     # Calibrating load cell
     mip.move(0, 0, 30, hop=False)
     calibrate()
-
-    # Begin writing gcode
-    print("Entry Code")
-    entryCode()
 
     # Progress bar
     progressBar = Progress()
