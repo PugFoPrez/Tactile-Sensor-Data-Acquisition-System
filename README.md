@@ -20,7 +20,7 @@ Acknowledgements:
 
 ### Installing the repository
 
-The repository can be downloaded from Github using: `git clone https://github.com/PugFoPrez/EEET4000-DataAcquisition.git`
+The repository can be downloaded from Github using: `git clone https://github.com/PugFoPrez/Tactile-Sensor-Data-Acquisition-System.git`
 
 ### Setting up the python environment
 
