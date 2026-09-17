@@ -1,5 +1,9 @@
 # eFlesh Data Acquisition System
 
+Version: v0.1.0
+
+---
+
 Developed by Bruce Davidson (Student ID: 20796033), Curtin University for undergraduate final year project.
 Below is a guide for use on Linux systems (Tested on Ubuntu 25.10). It covers how to install and setup the repository, and how to run the data acquisition code.
 
