@@ -177,9 +177,8 @@ class loadCellMeasure:
         Returns:
             _type_: _description_
         """
-        #TODO num samples - below is Claude generated - TODO verify
         cls.srl.reset_input_buffer()  # discard stale backlog first
-        # Throw away one line, since it may have been mid-transmission when we flushed
+        # Throw away one line, have been mid-transmission when we flushed
         cls.srl.readline()
 
         values = []

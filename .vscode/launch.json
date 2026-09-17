@@ -5,12 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File with Arguments",
+            "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            // "args": "--port /dev/ttyACM0"
+        },
+        {
+            "name": "Python Debugger: DAQ Generator Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "generator.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Python Debugger: NN Training Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "training.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/nn_model/"
         }
     ]
 }
