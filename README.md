@@ -26,13 +26,19 @@ Install the required python packages using `pip install -r requirements.txt`. Th
 
 #### 3D Printer
 
+Note that this project utilises an Ender 3 v2 as its CNC machine as they are cheap and readily available on second hand markets. The terms '3D Printer', 'Ender 3 v2', and 'CNC Machine' will be used interchangeably throughout this project's documentation.
+
 The 3D printer needs to be connected to the computer through its serial interface. On the Ender 3 V2 this will be the front panel Micro-USB connection. Note that this will turn the LCD on, but the printer still needs to be connected to mains power through its power supply connection.
 
 The USB device location will need to be found using `ls /dev/ | grep -e ACM -e USB`. For example, the device would be listed as `ttyUSB0`. This will then need to be entered into the Python script as `/dev/ttyUSB0`.
+The printer's hotend (metal section with radiator fins) and fan casing needs to be removed from the printhead and replaced with the load cell holder. The design for the load cell holder can be found #todo [here](). This will utilise the two screws used to keep the hotend in place for the load cell holder.
 
-The printer's hotend needs to be removed from the printhead and replaced with the load cell holder. The design for the load cell holder can be found #todo [here]().
 
-A holder for the eFlesh sensor has also been designed to keep the eFlesh board in place during probing. The design for the holder can be found #todo [here](). Note that this has been designed for one implementation of an eFlesh/magnetometer board holder and may need redesign for other implementations.
+#todo photos of steps to modify the printer
+
+A holder for the eFlesh sensor has also been designed to keep the eFlesh board in place during probing. The design for the holder can be found #todo [here](). Note that this has been designed for one implementation of an eFlesh/magnetometer board holder and may need redesign for other implementations. This needs to be secured to the heated bed of the Ender 3 V2, which was done by removing the glass print bed and using its clamps to secure the holder to the bed.
+
+#todo photos of steps to modify for holding
 
 #### eFlesh
 
@@ -40,7 +46,7 @@ The `reskin-sensor` and `anyskin` packages are required to get data from the eFl
 
 The eFlesh magnetometer board will first need to be connected to the supported microcontroller board. In this project, an Adafruit QT Py board was used and connected to the eFlesh magnetometer board using the provided QWIIC cable. Once connected to the computer through the board's USB connection the USB device needs to be located again which is once again done using the `ls /dev/ | grep -e ACM -e USB` command. It may be the case where insufficient permissions are granted for device access, which can be rectified using `sudo chmod a+rw /dev/<portName>`.
 
-#todo image of sensor configuration
+#todo image of sensor configuration + high level block diagram?
 
 The microcontroller code must now be uploaded to the QT Py board which is done following the process described by the [ReSkin Arduino Guide](https://github.com/raunaqbhirangi/reskin_sensor/tree/main/arduino). The ReSkin-Arduino Git repository will need to be downloaded. Note that this will require the Arduino IDE to be installed. Please follow steps on [this page](https://learn.adafruit.com/adafruit-qt-py/arduino-ide-setup) for installation of the Arduino IDE, and steps on [this page](https://learn.adafruit.com/adafruit-qt-py/using-with-arduino-ide) for flashing code onto the QT Py board. One point of note is that the "TinyUSB" option needed to be selected under Tools > USB Stack menu in the Arduino IDE for compilation to work.
 
@@ -99,15 +105,14 @@ while True:
 The primary setup of the load cell has now been completed. The following steps briefly describe additions made to the load cell for probing of the eFlesh sensor.
 
 #todo update below section with new changes
-A 3D printed probing tip needs to be attached to the load cell so that it can properly interact with the eFlesh sensor and excite the load cell. The load cell is to be placed into the previously mentioned load cell holder 'upside down', i.e., with the small dimple facing upwards and flat side facing downwards. The 3D printed tip was then attached using Blu-Tack to the flat face. This setup provides a good interface for adhering the tip to the load cell while allowing the load cell dimple to press onto the printed holder for accurate force measurement. To ensure the load cell remains inside the holder, some sticky tape was applied over the exposed load cell side/load cell holder #todo better way to hold it in?
+A 3D printed probing tip needs to be attached to the load cell so that it can properly interact with the eFlesh sensor and excite the load cell. The load cell is to be placed in the custom load cell holder with the flat surface against the top of the holder, with the probing tip then placed inline with the load cell. An example of this arrangement is given in the below image.
+
+#todo image of load cell configuration
+
+The design for the probing tips can be found #todo [here](). Note that these conform to a standard specification developed for this project to allow various designs to be interchangeable without requiring changes to the CNC machine's z-offset. The below image shows the general specifications for these drawings, as well as the dimensions of the already designed Flat and Rounded probing tips.
 
 #todo mention standard design requirements for probe tip and standard probe height
 #todo show schematic drawings of the round and flat designs already made
-#todo something something load cell probe tip
-
-The final load cell configuration is shown below.
-
-#todo image of load cell configuration
 
 ## Running the script
 Configuring the script is subject to change as it is developed.

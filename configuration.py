@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       3rd September 2026
-# Last Modified: 3rd Sep 2026 (Bruce Davidson)
+# Last Modified: 16th Sep 2026 (Bruce Davidson)
 #
 # configuration.py
 # This script configures loads the settings from the settings.json file
@@ -24,6 +24,9 @@ def readSettings():
 def param(paramName):
     """This functions returns the value for the specified parameter from the "settings.json" file.
     
+    Args:
+        paramName (String): The parameter name to lookup in the settings file
+
     Returns:
         String: Value of specified JSON parameter
     """
