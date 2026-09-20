@@ -52,7 +52,7 @@ class MLP(nn.Module):
 # Below class has been modified by Claude from the original. Review in progress
 class eFleshDataset(torch.utils.data.Dataset):
     """
-    Loads one or more combined eFlesh measurement CSVs of the form:
+    Loads one eFlesh measurement CSV of the form:
 
         X, Y, Z, LoadCell(kg),
         eFlesh1_x, eFlesh1_y, eFlesh1_z,
@@ -104,6 +104,15 @@ class eFleshDataset(torch.utils.data.Dataset):
 
         # Reformat data
         data = np.asarray(rows, dtype=np.float64)
+
+        # A single NaN/inf would make every loss NaN without raising, so fail loudly here
+        bad = ~np.isfinite(data)
+        if bad.any():
+            r, c = np.argwhere(bad)[0]
+            raise ValueError(
+                f"{int(bad.sum())} non-finite value(s) in {csv_path}; "
+                f"first at data row {r + 1} (excluding header), column '{header[c]}'"
+            )
 
         col_idx = {name: i for i, name in enumerate(header)}
         target_idx = [col_idx[name] for name in self.TARGET_COLS]
@@ -316,6 +325,7 @@ def main():
         out_path,
     )
     print(f"Saved model to {out_path}")
+
 
 if __name__ == "__main__":
     main()
