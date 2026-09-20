@@ -7,3 +7,4 @@ LOADCELLSAVE_code.py
 measurements/*
 calibration.json
 ignore_*.py
+nn_model/artifacts/*
