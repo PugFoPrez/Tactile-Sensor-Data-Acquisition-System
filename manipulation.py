@@ -37,7 +37,7 @@ def move(x, y, z, rel=False, hop=True, blockingWait=True):
         z (float): The destination Z position
         rel (bool, optional): Whether the movement should be done relative to the toolhead's position (True) or done in absolute positioning (False). Defaults to False.
         hop (bool, optional): Whether a hop should be enabled for the movement. Defaults to True.
-        blockingWait (Bool): Whether the M400 command should be sent in addition to the command to wait for the move to complete before returning.
+        blockingWait (Bool): Whether the machine should wait for the move to complete before returning - Note this uses non-blocking communication and may cause synchronisation issues!.
     """
     if hop:
         export.send(f"G91\nG1 Z{hopHeight:.2f} F{feedrateZ:.2f}", blockingWait=blockingWait)
