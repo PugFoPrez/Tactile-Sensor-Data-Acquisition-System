@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       12th May 2026
-# Last Modified: 3rd Sep 2026 (Bruce Davidson)
+# Last Modified: 21st Sep 2026 (Bruce Davidson)
 #
 # manipulation.py
 # This script handles formatting of CNC machine behaviours into appropriate gcode commands.
