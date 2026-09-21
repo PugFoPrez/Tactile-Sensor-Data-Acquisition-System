@@ -64,12 +64,12 @@ def home():
     export.send("G28 Z")
 
 def dwell(time=1):
-    """Pauses the printer for the specified amount of time
+    """Pauses the printer for the specified amount of time.
 
     Args:
-        time (int, optional): Time to pause for. Defaults to 1.
-    """    
-    export.send(f"G4 P{time}")
+        time (int, optional): Time to pause for in seconds. Defaults to 1.
+    """
+    export.send(f"G4 S{time}")
 
 def setProgress(frac):
     """Sets the gcode progress based on the provided value
