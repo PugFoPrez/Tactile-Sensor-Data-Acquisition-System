@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Created by Bruce Davidson - Curtin University ID: 20796033
-# 
+#
 # Created:       12th May 2026
 # Last Modified: 3rd Sep 2026 (Bruce Davidson)
 #
@@ -24,10 +24,10 @@ def comment(text):
 
     Args:
         text (String): The gcode comment (Without ";")
-    """    
+    """
     export.send(f"; {text}")
 
-def move(x, y, z, rel=False, hop=True):
+def move(x, y, z, rel=False, hop=True, blockingWait=True):
     """This function moves the toolhead to the specified position, either relative to the current position or to an absolute position.
     A hop is by default enabled to ensure that it doesn't drag the toolhead along flat surfaces.
 
@@ -37,9 +37,10 @@ def move(x, y, z, rel=False, hop=True):
         z (float): The destination Z position
         rel (bool, optional): Whether the movement should be done relative to the toolhead's position (True) or done in absolute positioning (False). Defaults to False.
         hop (bool, optional): Whether a hop should be enabled for the movement. Defaults to True.
+        blockingWait (Bool): Whether the M400 command should be sent in addition to the command to wait for the move to complete before returning.
     """
     if hop:
-        export.send(f"G91\nG1 Z{hopHeight:.2f} F{feedrateZ:.2f}")
+        export.send(f"G91\nG1 Z{hopHeight:.2f} F{feedrateZ:.2f}", blockingWait=blockingWait)
 
     feedrate = math.sqrt(pow(feedrateXY, 2) + pow(feedrateZ, 2))
 
@@ -48,16 +49,16 @@ def move(x, y, z, rel=False, hop=True):
     locZ = f"Z{z:2f} " if z != None else ""
 
     if (rel):
-        export.send(f"G91\nG1 {locX}{locY}{locZ}F{feedrate:.2f}")
+        export.send(f"G91\nG1 {locX}{locY}{locZ}F{feedrate:.2f}", blockingWait=blockingWait)
     else:
-        export.send(f"G90\nG1 {locX}{locY}{locZ}F{feedrate:.2f}")
+        export.send(f"G90\nG1 {locX}{locY}{locZ}F{feedrate:.2f}", blockingWait=blockingWait)
 
     if hop:
-        export.send(f"G91\nG1 Z-{hopHeight:.2f} F{feedrateZ:.2f}")
+        export.send(f"G91\nG1 Z-{hopHeight:.2f} F{feedrateZ:.2f}", blockingWait=blockingWait)
 
 def home():
     """Homes the 3D printer to (0,0,0)
-    """    
+    """
     export.send("M107 P1 ; Turn off part fan")
     export.send("G91\nG1 Z20")
     export.send("G28 X Y")
@@ -76,7 +77,7 @@ def setProgress(frac):
 
     Args:
         frac (float): Progress to be set. Must be in the range [0, 100]
-    """    
+    """
     if (frac < 0):
         frac = 0
         print("Progress cannot be negative. Clipped.")
