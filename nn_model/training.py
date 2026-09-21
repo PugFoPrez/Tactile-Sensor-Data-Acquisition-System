@@ -12,6 +12,9 @@
 # Code has been adapted using Claude to help parse the originally very dense code
 # NN development not a core focus of this thesis
 
+# Note that this is not a perfect implementation of the neural network!!
+# This is not a focus of the project
+
 import argparse
 import os
 import csv
@@ -270,7 +273,7 @@ def fit(
         )
         metrics_bar.set_description_str(
             f"Train MSE {train_mse:.4f} | Val MSE {val_mse:.4f} | "
-            f"RMSE x {rx:.2f} y {ry:.2f} z {rz:.2f} | Net {spatial_rmse.item():.2f} mm | "
+            f"RMSE x {rx:.2f} y {ry:.2f} z {rz:.2f} | 3D RMSE {spatial_rmse.item():.2f} mm | "
             f"F {rf:.3f} kg"
         )
 
