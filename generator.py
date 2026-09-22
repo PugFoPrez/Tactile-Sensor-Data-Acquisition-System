@@ -40,7 +40,7 @@ probingOffset = [96.0, 92.0, 28.0]
 probingMin = [0, 0, -5]
 probingMax = [25, 25, -10]
 # Amount of samples to probe in between each axis
-probingSteps = [10, 10, 5]
+probingSteps = [16, 16, 6]
 # How long to wait at the probing position to measure
 probingDwell = 0.25 # seconds
 
@@ -244,11 +244,6 @@ def calibrate():
 def main():
     global task_probing
     global progressBar
-
-    progressBar = Progress()
-    probeGrid(maxRandomOffset=[1,1,0.5])
-
-    return
 
     print("Gcode Generator for sensor planar data acquisition")
 
