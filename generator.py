@@ -79,14 +79,21 @@ def probeGrid(maxRandomOffset=[0,0,0]):
             yy = y + probingOffset[iy]
             # Move to point above
             mip.move(xx, yy, probingOffset[iz] + 5)
+
+            # Seed for a XY value (XY location)
+            random.seed(randomSeed + x/y)
+            # Random XY value, consistent between Z heights
+            randomOffsetXY = [
+                random.random() * maxRandomOffset[ix],
+                random.random() * maxRandomOffset[iy],
+            ]
+
             for z in pointsZ:
                 zz = z + probingOffset[iz]
 
-                randomOffset = [
-                    random.random() * maxRandomOffset[ix],
-                    random.random() * maxRandomOffset[iy],
-                    random.random() * maxRandomOffset[iz],
-                ]
+                # Seed for a Z location
+                random.seed(randomSeed + x/y + z)
+                randomOffset = randomOffsetXY + [random.random() * maxRandomOffset[iz]]
 
                 [x,y,z] = [x,y,z] + np.array(randomOffset)
 
