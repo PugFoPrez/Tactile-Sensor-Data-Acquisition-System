@@ -74,18 +74,17 @@ def probeGrid(maxRandomOffset=[0,0,0]):
     progressBar.start()
 
     for x in pointsX:
-        for y in pointsY:
-            # Seed for a XY value (XY location)
-            # TODO x + y approach means that seed is symmetrical across diagonal
-            # can't do x/y as y can be 0
-            random.seed(randomSeed + x + y)
-            # Random XY value, consistent between Z heights
-            randomOffsetXY = [
-                random.random() * maxRandomOffset[ix],
-                random.random() * maxRandomOffset[iy],
-            ]
+        # Random offset on X
+        random.seed(randomSeed)
+        randomOffsetX = random.random() * maxRandomOffset[ix]
+        x = x + randomOffsetX
 
-            [x, y] = np.add([x, y], randomOffsetXY).tolist()
+        for y in pointsY:
+            # Random offset on Y
+            randomOffsetY = random.random() * maxRandomOffset[iy]
+            y = y + randomOffsetY
+            # Update seed
+            randomSeed = randomSeed + 1
 
             xx = x + probingOffset[ix]
             yy = y + probingOffset[iy]
