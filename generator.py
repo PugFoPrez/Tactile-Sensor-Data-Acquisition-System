@@ -81,7 +81,9 @@ def probeGrid(maxRandomOffset=[0,0,0]):
             mip.move(xx, yy, probingOffset[iz] + 5)
 
             # Seed for a XY value (XY location)
-            random.seed(randomSeed + x/y)
+            # TODO x + y approach means that seed is symmetrical across diagonal
+            # can't do x/y as y can be 0
+            random.seed(randomSeed + x + y)
             # Random XY value, consistent between Z heights
             randomOffsetXY = [
                 random.random() * maxRandomOffset[ix],
@@ -92,7 +94,7 @@ def probeGrid(maxRandomOffset=[0,0,0]):
                 zz = z + probingOffset[iz]
 
                 # Seed for a Z location
-                random.seed(randomSeed + x/y + z)
+                random.seed(randomSeed + x + y + z)
                 randomOffset = randomOffsetXY + [random.random() * maxRandomOffset[iz]]
 
                 [x,y,z] = [x,y,z] + np.array(randomOffset)
@@ -280,7 +282,7 @@ def main():
     progressBar = Progress()
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
-    with keep.running(): # Prevent CPU suspend mid probing
+    with keep.presenting(): # Prevent CPU suspend mid probing
         probeGrid()
         # probeNormalForce()
     mip.setProgress(100)
