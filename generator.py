@@ -58,6 +58,7 @@ def entryCode():
     mip.home()
 
 def probeGrid(maxRandomOffset=[0,0,0]):
+    global randomSeed
     """This function generates the point grid for the 3D printer to use in probing.
     It additionally loops through each of these points and sends the appropriate movement commands to the printer, as well saving data from the sensors.
 
