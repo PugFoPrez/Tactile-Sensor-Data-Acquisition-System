@@ -40,7 +40,7 @@ probingOffset = [96.0, 92.0, 28.0]
 probingMin = [0, 0, -5]
 probingMax = [25, 25, -10]
 # Amount of samples to probe in between each axis
-probingSteps = [10, 10, 5]
+probingSteps = [16, 16, 6]
 # How long to wait at the probing position to measure
 probingDwell = 0.25 # seconds
 
@@ -74,21 +74,32 @@ def probeGrid(maxRandomOffset=[0,0,0]):
     progressBar.start()
 
     for x in pointsX:
-        xx = x + probingOffset[ix]
         for y in pointsY:
+            # Seed for a XY value (XY location)
+            # TODO x + y approach means that seed is symmetrical across diagonal
+            # can't do x/y as y can be 0
+            random.seed(randomSeed + x + y)
+            # Random XY value, consistent between Z heights
+            randomOffsetXY = [
+                random.random() * maxRandomOffset[ix],
+                random.random() * maxRandomOffset[iy],
+            ]
+
+            [x, y] = np.add([x, y], randomOffsetXY).tolist()
+
+            xx = x + probingOffset[ix]
             yy = y + probingOffset[iy]
+            zz = probingOffset[iz] + 5
+
             # Move to point above
-            mip.move(xx, yy, probingOffset[iz] + 5)
+            mip.move(xx, yy, zz)
+
             for z in pointsZ:
+                # Seed for a Z location
+                random.seed(randomSeed + x + y + z)
+                randomOffsetZ = random.random() * maxRandomOffset[iz]
+                z = z + randomOffsetZ
                 zz = z + probingOffset[iz]
-
-                randomOffset = [
-                    random.random() * maxRandomOffset[ix],
-                    random.random() * maxRandomOffset[iy],
-                    random.random() * maxRandomOffset[iz],
-                ]
-
-                [x,y,z] = [x,y,z] + np.array(randomOffset)
 
                 mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
                             f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
@@ -245,11 +256,6 @@ def main():
     global task_probing
     global progressBar
 
-    progressBar = Progress()
-    probeGrid(maxRandomOffset=[1,1,0.5])
-
-    return
-
     print("Gcode Generator for sensor planar data acquisition")
 
     mip.comment(f"Data Acquisition Code: {date.today().isoformat()}")
@@ -278,7 +284,7 @@ def main():
     progressBar = Progress()
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
-    with keep.running(): # Prevent CPU suspend mid probing
+    with keep.presenting(): # Prevent CPU suspend mid probing
         probeGrid()
         # probeNormalForce()
     mip.setProgress(100)
