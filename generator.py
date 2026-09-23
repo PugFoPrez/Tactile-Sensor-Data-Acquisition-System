@@ -74,12 +74,7 @@ def probeGrid(maxRandomOffset=[0,0,0]):
     progressBar.start()
 
     for x in pointsX:
-        xx = x + probingOffset[ix]
         for y in pointsY:
-            yy = y + probingOffset[iy]
-            # Move to point above
-            mip.move(xx, yy, probingOffset[iz] + 5)
-
             # Seed for a XY value (XY location)
             # TODO x + y approach means that seed is symmetrical across diagonal
             # can't do x/y as y can be 0
@@ -90,14 +85,21 @@ def probeGrid(maxRandomOffset=[0,0,0]):
                 random.random() * maxRandomOffset[iy],
             ]
 
-            for z in pointsZ:
-                zz = z + probingOffset[iz]
+            [x, y] = np.add([x, y], randomOffsetXY).tolist()
 
+            xx = x + probingOffset[ix]
+            yy = y + probingOffset[iy]
+            zz = probingOffset[iz] + 5
+
+            # Move to point above
+            mip.move(xx, yy, zz)
+
+            for z in pointsZ:
                 # Seed for a Z location
                 random.seed(randomSeed + x + y + z)
-                randomOffset = randomOffsetXY + [random.random() * maxRandomOffset[iz]]
-
-                [x,y,z] = [x,y,z] + np.array(randomOffset)
+                randomOffsetZ = random.random() * maxRandomOffset[iz]
+                z = z + randomOffsetZ
+                zz = z + probingOffset[iz]
 
                 mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
                             f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
