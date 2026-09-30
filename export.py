@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 # Created by Bruce Davidson - Curtin University ID: 20796033
-# 
+#
 # Created:       12th May 2026
-# Last Modified: 6th Sep 2026 (Bruce Davidson)
-# 
+# Last Modified: 21st Sep 2026 (Bruce Davidson)
+#
 # export.py
 # This script handles exporting gcode to both the CNC machine's serial line and to the testing.gcode file for checking.
 
@@ -14,14 +14,17 @@ import configuration as conf
 gcode_filename = conf.param("output.gcodeFile")
 gcodeFile = open(gcode_filename, "w")
 
-def send(text):
+def send(text, blockingWait=True):
     """Sends a command to the 3D printer, as well as adding it to the saved gcode file.
-    This will be appended with the M400 command to ensure the command completes.
+    If blockingWait is set to False, commands will be allowed to buffer - This will break synchronisation of code between movements, use with caution!.
 
     Args:
         text (String): The command to send.
-    """    
-    text = text + "\nM400"
+        blockingWait (Bool): Whether the machine should wait until the command has completed before returning control.
+    """
+    text = text + "\n"
+    if blockingWait:
+        text = text + "M400"
     append(text)
     if comms.sendSerial:
         sendGcode(text)
@@ -40,7 +43,7 @@ def sendGcode(text):
 
     Args:
         text (String): Command to send to the printer.
-    """    
+    """
     text = text.strip()  # Strip all EOL characters for streaming
 
     for line in text.splitlines():

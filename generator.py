@@ -20,6 +20,7 @@ import numpy as np
 import measure as meas
 import time
 import json
+import random
 from rich.progress import Progress
 from wakepy import keep
 
@@ -30,13 +31,18 @@ ix = 0
 iy = 1
 iz = 2
 
+# Randomiser
+randomSeed = 0
+
 # Probing Offset corresponds to the topmost SW surface of the sensor
 probingOffset = [96.0, 92.0, 28.0]
 # Where to start and end probing
 probingMin = [0, 0, -5]
 probingMax = [25, 25, -10]
 # Amount of samples to probe in between each axis
-probingSteps = [10, 10, 5]
+probingSteps = [16, 16, 6]
+# How long to wait at the probing position to measure
+probingDwell = 0.25 # seconds
 
 progressBar = None
 task_probing = None
@@ -51,9 +57,13 @@ def entryCode():
     mip.comment("Home")
     mip.home()
 
-def probeGrid():
+def probeGrid(maxRandomOffset=[0,0,0]):
+    global randomSeed
     """This function generates the point grid for the 3D printer to use in probing.
     It additionally loops through each of these points and sends the appropriate movement commands to the printer, as well saving data from the sensors.
+
+    Args:
+        maxRandomOffset (Float, optional): If non-zero, a random offset is added to the respective [X,Y,Z] components. Defaults to [0,0,0].
     """
     pointsX = np.linspace(probingMin[ix], probingMax[ix], probingSteps[ix])
     pointsY = np.linspace(probingMin[iy], probingMax[iy], probingSteps[iy])
@@ -65,18 +75,37 @@ def probeGrid():
     progressBar.start()
 
     for x in pointsX:
-        xx = x + probingOffset[ix]
+        # Random offset on X
+        random.seed(randomSeed)
+        randomOffsetX = random.random() * maxRandomOffset[ix]
+        x = x + randomOffsetX
+
         for y in pointsY:
+            # Random offset on Y
+            randomOffsetY = random.random() * maxRandomOffset[iy]
+            y = y + randomOffsetY
+            # Update seed
+            randomSeed = randomSeed + 1
+
+            xx = x + probingOffset[ix]
             yy = y + probingOffset[iy]
+            zz = probingOffset[iz] + 5
+
             # Move to point above
-            mip.move(xx, yy, probingOffset[iz] + 5)
+            mip.move(xx, yy, zz)
+
             for z in pointsZ:
+                # Seed for a Z location
+                random.seed(randomSeed + x + y + z)
+                randomOffsetZ = random.random() * maxRandomOffset[iz]
+                z = z + randomOffsetZ
                 zz = z + probingOffset[iz]
+
                 mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
                             f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
                 # Probe point
                 mip.move(xx, yy, zz, hop=False)
-                mip.dwell(0.25)
+                mip.dwell(probingDwell)
                 # Save measurements
                 meas.saveData([x,y,z])
                 mip.dwell(0.25)
@@ -99,7 +128,7 @@ def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
     # Move to point above
     mip.move(x, y, probingOffset[iz] + 5)
     mip.move(x, y, z, hop=False)
-    mip.dwell(0.25)
+    mip.dwell(probingDwell)
     # Save measurements
     meas.saveData([x,y,z])
     mip.dwell(0.25)
@@ -206,7 +235,7 @@ def calibrate():
             print("")
     if saveCal:
         calFile = open("calibration.json", "w")
-        calibration = {"knownMass": recorded_mass, 
+        calibration = {"knownMass": recorded_mass,
                        "rawReading": meas.loadCellMeasure.reading_ref}
         json.dump(calibration, calFile)
         calFile.close()
@@ -255,7 +284,7 @@ def main():
     progressBar = Progress()
     mip.comment("Begin Probing")
     mip.move(0, 0, probingOffset[iz], hop=False)
-    with keep.running(): # Prevent CPU suspend mid probing
+    with keep.presenting(): # Prevent CPU suspend mid probing
         probeGrid()
         # probeNormalForce()
     mip.setProgress(100)
