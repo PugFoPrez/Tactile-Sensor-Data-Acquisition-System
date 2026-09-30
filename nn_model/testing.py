@@ -31,7 +31,7 @@ import torch.nn as nn
 from training import MLP, eFleshDataset
 
 # IO Parameters (keep the same as in training.py)
-data_folder = "../measurements/"
+data_folder = f"..{os.sep}measurements{os.sep}"
 test_file_prefix = "meas-dwell-250ms" # The baseline dataset to test off of
 out_dir = "artifacts"
 model_file_prefix = "meas-rndm-1000-500"

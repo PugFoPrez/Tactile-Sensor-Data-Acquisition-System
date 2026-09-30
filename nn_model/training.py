@@ -33,7 +33,7 @@ mag_thresh = 145.1
 seed = 0
 
 # IO Parameters
-data_folder = "../measurements/"
+data_folder = f"..{os.sep}measurements{os.sep}"
 data_file_prefix = "meas-rndm-1000-500"
 out_dir = "artifacts"
 out_file_name = f"eFlesh_{data_file_prefix}.pt"
