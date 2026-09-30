@@ -34,9 +34,9 @@ seed = 0
 
 # IO Parameters
 data_folder = "../measurements/"
-data_file_prefix = "meas"
+data_file_prefix = "meas-rndm-1000-500"
 out_dir = "artifacts"
-
+out_file_name = f"eFlesh_{data_file_prefix}.pt"
 
 class MLP(nn.Module):
     def __init__(self, in_dim: int, out_dim: int, hidden: int = 128):
@@ -310,7 +310,7 @@ def main():
     )
 
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"eflesh_{data_file_prefix}_spatial_force_mlp128.pt")
+    out_path = os.path.join(out_dir, out_file_name)
 
     torch.save(
         {

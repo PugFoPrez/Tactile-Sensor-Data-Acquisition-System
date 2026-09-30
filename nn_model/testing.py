@@ -10,7 +10,7 @@
 # (saved by training.py) and evaluates it on a separate testing dataset.
 #
 # Expects the testing CSV to be formatted identically to the measurement CSVs
-# used for training, and named "testing_<DATETIME>.csv"
+# used for training, and named "<PREFIX>_<DATETIME>.csv"
 # e.g. "testing_2026-09-16 17:38:19.csv"
 #
 # Usage:
@@ -32,10 +32,10 @@ from training import MLP, eFleshDataset
 
 # IO Parameters (keep the same as in training.py)
 data_folder = "../measurements/"
-test_file_prefix = "testing"
-data_file_prefix = "meas"
+test_file_prefix = "meas-dwell-250ms" # The baseline dataset to test off of
 out_dir = "artifacts"
-model_file = f"eflesh_{data_file_prefix}_spatial_force_mlp128.pt"
+model_file_prefix = "meas-rndm-1000-500"
+model_file = f"eFlesh_{model_file_prefix}.pt" # The variation NN model to test
 
 # Eval Parameters
 batch_size = 1024
@@ -153,7 +153,7 @@ def main():
 
     # Record metrics to disk
     os.makedirs(out_dir, exist_ok=True)
-    safe_stem = os.path.splitext(os.path.basename(csv_path))[0].replace(" ", "_").replace(":", "-")
+    safe_stem = os.path.splitext(os.path.basename(model_file_prefix))[0].replace(" ", "_").replace(":", "-")
     metrics_path = os.path.join(out_dir, f"metrics_{safe_stem}.json")
     with open(metrics_path, "w") as f:
         json.dump({"model": args.model, "test_file": csv_path, **m}, f, indent=2)
