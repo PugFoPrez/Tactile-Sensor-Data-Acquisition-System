@@ -24,7 +24,7 @@ from datetime import datetime
 import configuration as conf
 
 data_prefix = conf.param("output.measFilePrefix")
-data_filename = "measurements/" + data_prefix + "_" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".csv"
+data_filename = f"measurements{os.sep}{data_prefix}_{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}.csv"
 
 class measurement:
     """Measurement class for 3D printer positioning, load cell value, and eFlesh magnetometer values
