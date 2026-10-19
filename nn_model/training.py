@@ -35,6 +35,7 @@ batch_size = 64
 learning_rate = 1e-3
 mag_thresh = 145.1
 seed = 0
+multipass = 1 # number of passes done when probing
 
 # IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
@@ -208,12 +209,25 @@ def fit(
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    # Split dataset into random 80% split
+        # Split dataset
     n = len(dataset_full.X)
-    idxs = np.arange(n)
-    np.random.shuffle(idxs)
-    split = int(0.8 * n)
-    train_idx, val_idx = idxs[:split], idxs[split:]
+    if multipass == 1:
+        # Random 80/20 split (unchanged behaviour)
+        idxs = np.arange(n)
+        np.random.shuffle(idxs)
+        split = int(0.8 * n)
+        train_idx, val_idx = idxs[:split], idxs[split:]
+    else:
+        # The file is `multipass` consecutive passes of equal length
+        if n % multipass != 0:
+            raise ValueError(f"{n} rows cannot be split into {multipass} equal passes")
+        pass_len = n // multipass
+        pass_id = np.arange(n) // pass_len
+        val_pass = multipass - 1  # last pass is used for validation
+        train_idx = np.where(pass_id != val_pass)[0]
+        val_idx = np.where(pass_id == val_pass)[0]
+        print(f"Multipass split: {multipass} passes of {pass_len} rows; "
+              f"validation = pass {val_pass + 1}, training = remaining {multipass - 1} pass(es)")
 
     # Compute normalization stats from the training split only
     x_mean = dataset_full.X[train_idx].mean(axis=0)
@@ -250,7 +264,8 @@ def fit(
     # Track history and best model (by validation MSE)
     train_hist, val_hist = [], []
     best_val, best_epoch, best_state = float("inf"), 0, None
-
+    best_stats = None
+    
     # Train: loop through epochs
     pbar = tqdm(range(1, epochs + 1), desc="Training", dynamic_ncols=True, position=0)
     metrics_bar = tqdm(total=0, bar_format="{desc}", dynamic_ncols=True, position=1)
@@ -286,9 +301,6 @@ def fit(
 
         train_hist.append(train_mse)
         val_hist.append(val_mse)
-        if val_mse < best_val:
-            best_val, best_epoch = val_mse, e
-            best_state = copy.deepcopy(model.state_dict())
 
         pred = torch.cat(all_pred, dim=0)
         true = torch.cat(all_true, dim=0)
@@ -310,6 +322,18 @@ def fit(
             f"RMSE x {rx:.2f} y {ry:.2f} z {rz:.2f} | 3D RMSE {spatial_rmse.item():.2f} mm | "
             f"F {rf:.3f} kg"
         )
+        if val_mse < best_val:
+            best_val, best_epoch = val_mse, e
+            best_state = copy.deepcopy(model.state_dict())
+            best_stats = {
+                "train_mse": train_mse,
+                "val_mse": val_mse,
+                "rmse_x": rx,
+                "rmse_y": ry,
+                "rmse_z": rz,
+                "rmse_3d": spatial_rmse.item(),
+                "rmse_f": rf,
+            }
 
     metrics_bar.close()
     pbar.close()
@@ -317,7 +341,12 @@ def fit(
     # Restore the best-validation weights and plot the curves
     model.load_state_dict(best_state)
     plot_learning_curve(train_hist, val_hist, best_epoch, out_dir)
-    print(f"Best epoch: {best_epoch} (Val MSE {best_val:.6f})")
+    s = best_stats
+    print(f"Best epoch: {best_epoch}")
+    print(f"  MSE       train {s['train_mse']:.6f} | val {s['val_mse']:.6f} (normalised)")
+    print(f"  RMSE      x {s['rmse_x']:.4f} | y {s['rmse_y']:.4f} | z {s['rmse_z']:.4f} mm")
+    print(f"  3D RMSE   {s['rmse_3d']:.4f} mm")
+    print(f"  Force RMSE {s['rmse_f']:.4f} kg")
 
     return model, (x_mean, x_std, y_mean, y_std), best_epoch
 
