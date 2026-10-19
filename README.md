@@ -7,7 +7,7 @@ Version: v0.1.0
 Developed by Bruce Davidson (Student ID: 20796033), Curtin University for undergraduate final year project.
 Below is a guide for use on Linux systems (Tested on Ubuntu 25.10). It covers how to install and setup the repository, and how to run the data acquisition code.
 
-#todo Update to include codes for Windows based computers
+Windows support is currently a work in progress due to the `termios` module requiring a POSIX-based operating system.
 
 Acknowledgements:
 - The 3D printer control code is based off of user XDGFX's Coordinate Measuring Machine repository on [Github](https://github.com/XDGFX/gcode-cmm).
@@ -26,7 +26,8 @@ The repository can be downloaded from Github using: `git clone https://github.co
 
 Install the required python packages using `pip install -r requirements.txt`. This will install generic packages as well as ones for terminal and device communication.
 
-### Setting up the sensors
+### Setting up the CNC machine and Sensors
+The following provides a brief guide on how to setup and configure the CNC machine and sensors for use in the project. A more detailed guide is given in the #todo thesis filename, detailing each step with images provided for reference, as well as additional detail explaining how the system works (please read it I spent a lot of time on it).
 
 #### 3D Printer
 
@@ -35,8 +36,7 @@ Note that this project utilises an Ender 3 v2 as its CNC machine as they are che
 The 3D printer needs to be connected to the computer through its serial interface. On the Ender 3 V2 this will be the front panel Micro-USB connection. Note that this will turn the LCD on, but the printer still needs to be connected to mains power through its power supply connection.
 
 The USB device location will need to be found using `ls /dev/ | grep -e ACM -e USB`. For example, the device would be listed as `ttyUSB0`. This will then need to be entered into the Python script as `/dev/ttyUSB0`.
-The printer's hotend (metal section with radiator fins) and fan casing needs to be removed from the printhead and replaced with the load cell holder. The design for the load cell holder can be found #todo [here](). This will utilise the two screws used to keep the hotend in place for the load cell holder.
-
+The printer's hotend (metal section with radiator fins) and fan casing needs to be removed from the printhead and replaced with the probe holder. The design for the probe holder can be found #todo [here](). This will utilise the two screws used to keep the hotend in place for the probe holder.
 
 #todo photos of steps to modify the printer
 
@@ -52,9 +52,41 @@ The eFlesh magnetometer board will first need to be connected to the supported m
 
 #todo image of sensor configuration + high level block diagram?
 
-The microcontroller code must now be uploaded to the QT Py board which is done following the process described by the [ReSkin Arduino Guide](https://github.com/raunaqbhirangi/reskin_sensor/tree/main/arduino). The ReSkin-Arduino Git repository will need to be downloaded. Note that this will require the Arduino IDE to be installed. Please follow steps on [this page](https://learn.adafruit.com/adafruit-qt-py/arduino-ide-setup) for installation of the Arduino IDE, and steps on [this page](https://learn.adafruit.com/adafruit-qt-py/using-with-arduino-ide) for flashing code onto the QT Py board. One point of note is that the "TinyUSB" option needed to be selected under Tools > USB Stack menu in the Arduino IDE for compilation to work.
+The microcontroller code must now be uploaded to the QT Py board. The following describes the steps required to setup and flash the required firmware for the eFlesh sensor, which has been done following
+guides from [eFlesh](https://github.com/notvenky/eFlesh), the [Anyskin Repository](https://github.com/raunaqbhirangi/anyskin), and [Arduino IDE QT Py Guide](https://learn.adafruit.com/adafruit-qt-py/using-with-arduino-ide).
 
-#todo note down what codes were used from the repo and the issues with getting the MLX90393 library working.
+1.  First, the required libraries must be installed. This was done with
+    the following terminal command:\
+    `pip install reskin-sensor anyskin pygame matplotlib`\
+    `numpy==1.26.4`
+2.  With the connections made as described previously, the connected USB
+    port can be found using `ls /dev/ | grep -e ACM -e USB` or device manager if using Windows.
+3.  The Arduino IDE will then need to be configured for flashing:
+    1.  In the Arduino preferences, an additional board URL needs to be
+        added to support the Adafruit board. In the text box, the
+        following URL must be added\
+        `https://adafruit.github.io/arduino-board-index/package`\
+        `_adafruit_index.json`
+    2.  The board now needs to be selected, which is done in the
+        `Tools > Board > Board Manager` option. From this menu, the
+        latest \"Adafruit SAMD Boards (32-bits ARM Cortex M0+)\" option
+        needs to be installed.
+    3.  In the same menu, \"Adafruit SAMD Boards\" must also be
+        installed.
+    4.  Close and reopen the Arduino IDE to load the boards.
+    5.  In the `Tools > Board` menu, the `Adafruit QT Py M0` can now be
+        selected.
+    6.  The port should then be selected using Tools \> Port based on
+        what was found using Step 2.
+    7.  In `Tools > Optimize`, the `Small (-Os) (standard)` option
+        should be used.
+    8.  In `Tools > USB Stack`, the `TinyUSB` option should be used.
+4.  The eFlesh code requires the MLX90393 library file, which can be
+    downloaded from the eFlesh repository from the `arduino/` folder.
+5.  With the Arduino IDE now properly configured, the
+    `arduino/5x_eFlesh_stream/`\
+    `5x_eFlesh_stream.ino` code from the eFlesh repository can be
+    uploaded using `Sketch > Upload`.
 
 #### Load Cell
 
@@ -108,14 +140,12 @@ while True:
 
 The primary setup of the load cell has now been completed. The following steps briefly describe additions made to the load cell for probing of the eFlesh sensor.
 
-#todo update below section with new changes
-A 3D printed probing tip needs to be attached to the load cell so that it can properly interact with the eFlesh sensor and excite the load cell. The load cell is to be placed in the custom load cell holder with the flat surface against the top of the holder, with the probing tip then placed inline with the load cell. An example of this arrangement is given in the below image.
-
 #todo image of load cell configuration
 
 The design for the probing tips can be found #todo [here](). Note that these conform to a standard specification developed for this project to allow various designs to be interchangeable without requiring changes to the CNC machine's z-offset. The below image shows the general specifications for these drawings, as well as the dimensions of the already designed Flat and Rounded probing tips.
 
-#todo mention standard design requirements for probe tip and standard probe height
+Finally, the probe tip will need to be placed into the probe holder along with the load cell, and secured to the toolhead.
+
 #todo show schematic drawings of the round and flat designs already made
 
 ## Running the script
