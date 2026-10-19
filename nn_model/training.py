@@ -16,6 +16,7 @@
 # This is not a focus of the project
 
 import argparse
+import copy
 import os
 import csv
 import numpy as np
@@ -24,6 +25,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
+import matplotlib
+matplotlib.use("Agg")  # headless-safe backend, no window needed
+import matplotlib.pyplot as plt
 
 # NN Parameters
 epochs = 1000
@@ -34,7 +38,7 @@ seed = 0
 
 # IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
-data_file_prefix = "meas-rndm-1000-500"
+data_file_prefix = "meas-dens-5000"
 out_dir = "artifacts"
 out_file_name = f"eFlesh_{data_file_prefix}.pt"
 
@@ -172,6 +176,26 @@ class eFleshDataset(torch.utils.data.Dataset):
             return y * torch.tensor(self.y_std, device=y.device) + torch.tensor(self.y_mean, device=y.device)
         return y * self.y_std + self.y_mean
 
+def plot_learning_curve(train_hist, val_hist, best_epoch, out_dir):
+    epochs_range = range(1, len(train_hist) + 1)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(epochs_range, train_hist, label="Train MSE")
+    ax.plot(epochs_range, val_hist, label="Val MSE")
+    ax.axvline(best_epoch, color="gray", linestyle="--", label=f"Best epoch ({best_epoch})")
+    ax.set_yscale("log")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("MSE (normalised)")
+    ax.set_title("Learning curve")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"learning_curve_{data_file_prefix}.png")
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+    print(f"Saved learning curve to {path}")
+
 def fit(
     dataset_full: eFleshDataset,
     epochs: int,
@@ -223,6 +247,10 @@ def fit(
     opt = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
 
+    # Track history and best model (by validation MSE)
+    train_hist, val_hist = [], []
+    best_val, best_epoch, best_state = float("inf"), 0, None
+
     # Train: loop through epochs
     pbar = tqdm(range(1, epochs + 1), desc="Training", dynamic_ncols=True, position=0)
     metrics_bar = tqdm(total=0, bar_format="{desc}", dynamic_ncols=True, position=1)
@@ -256,6 +284,12 @@ def fit(
                 all_true.append(Yb.cpu())
         val_mse = val_loss_sum / max(1, val_count)
 
+        train_hist.append(train_mse)
+        val_hist.append(val_mse)
+        if val_mse < best_val:
+            best_val, best_epoch = val_mse, e
+            best_state = copy.deepcopy(model.state_dict())
+
         pred = torch.cat(all_pred, dim=0)
         true = torch.cat(all_true, dim=0)
 
@@ -280,7 +314,12 @@ def fit(
     metrics_bar.close()
     pbar.close()
 
-    return model, (x_mean, x_std, y_mean, y_std)
+    # Restore the best-validation weights and plot the curves
+    model.load_state_dict(best_state)
+    plot_learning_curve(train_hist, val_hist, best_epoch, out_dir)
+    print(f"Best epoch: {best_epoch} (Val MSE {best_val:.6f})")
+
+    return model, (x_mean, x_std, y_mean, y_std), best_epoch
 
 def main():
     pattern = os.path.join(f"{data_folder}", f"{data_file_prefix}_*.csv")
@@ -300,7 +339,7 @@ def main():
     print(f"Loaded {len(full)} samples "
           f"({full.X.shape[1]} sensor inputs -> {full.Y.shape[1]} targets: {full.TARGET_COLS})")
 
-    model, stats = fit(
+    model, stats, best_epoch = fit(
         dataset_full=full,
         epochs=epochs,
         batch_size=batch_size,
@@ -324,6 +363,7 @@ def main():
             "x_std": stats[1],
             "y_mean": stats[2],
             "y_std": stats[3],
+            "best_epoch": best_epoch,
         },
         out_path,
     )
