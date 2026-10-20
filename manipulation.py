@@ -49,7 +49,10 @@ def move(x, y, z, rel=False, hop=True, blockingWait=True):
     if not hop:
        locZ = f"Z{z:2f} " if z != None else ""
     else:
-       locZ = f"Z{z+hopHeight:2f} " if z != None else ""
+       if not rel:
+           locZ = f"Z{z+hopHeight:2f} " if z != None else ""
+       else:
+           locZ = f"Z{z:2f} " if z != None else ""
 
     if (rel):
         export.send(f"G91\nG1 {locX}{locY}{locZ}F{feedrate:.2f}", blockingWait=blockingWait)
