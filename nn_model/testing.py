@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       20th Sep 2026
-# Last Modified: 20th Sep 2026 (Bruce Davidson)
+# Last Modified: 21st Oct 2026 (Bruce Davidson)
 #
 # nn_model/testing.py
 # This script loads a trained contact and force estimation model for the eFlesh sensor
@@ -28,13 +28,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from training import MLP, eFleshDataset
+from training import MLP, eFleshDataset, print_test_csv
 
 # IO Parameters (keep the same as in training.py)
 data_folder = f"..{os.sep}measurements{os.sep}"
-test_file_prefix = "meas-dwell-250ms" # The baseline dataset to test off of
+test_file_prefix = "meas-baseline-extent" # The baseline dataset to test off of
 out_dir = "artifacts"
-model_file_prefix = "meas-rndm-1000-500"
+model_file_prefix = "meas-rndm-500-250"
 model_file = f"eFlesh_{model_file_prefix}.pt" # The variation NN model to test
 
 # Eval Parameters
@@ -149,6 +149,24 @@ def main():
         f"RMSE x {m['rmse_x']:.2f} y {m['rmse_y']:.2f} z {m['rmse_z']:.2f} | "
         f"3D RMSE {m['rmse_3d_mm']:.2f} mm | "
         f"F {m['rmse_force_kg']:.3f} kg"
+    )
+
+    # Copyable CSV block, same layout as training.py.
+    test_name = model_file_prefix
+    print_test_csv(
+        test_metrics={
+            "mse": m["test_mse"],
+            "rmse_x": m["rmse_x"],
+            "rmse_y": m["rmse_y"],
+            "rmse_z": m["rmse_z"],
+            "rmse_3d": m["rmse_3d_mm"],
+            "rmse_f": m["rmse_force_kg"],
+        },
+        split_desc=test_name,
+        best_epoch=ckpt.get("best_epoch", "NA"),
+        n_train=ckpt.get("n_train", "NA"),
+        n_val=ckpt.get("n_val", "NA"),
+        n_test=m["n_samples"],
     )
 
     # Record metrics to disk
