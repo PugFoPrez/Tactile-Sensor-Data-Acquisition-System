@@ -3,7 +3,7 @@
 # Created by Bruce Davidson - Curtin University ID: 20796033
 #
 # Created:       16th Sep 2026
-# Last Modified: 20th Sep 2026 (Bruce Davidson)
+# Last Modified: 21st Oct 2026 (Bruce Davidson)
 #
 # nn_model/training.py
 # This script is used for training a contact and force estimation model for the eFlesh sensor.
@@ -33,13 +33,16 @@ import matplotlib.pyplot as plt
 epochs = 1000
 batch_size = 64
 learning_rate = 1e-3
-mag_thresh = 145.1
+mag_thresh = 145.1 # unused
 seed = 0
 multipass = 1 # number of passes done when probing
+# multipass == 1  -> random 60/20/20 train/validation/test split
+# multipass == 2  -> not allowed
+# multipass >= 3  -> contiguous 1:1:1 train/validation/test split
 
 # IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
-data_file_prefix = "meas-dens-5000"
+data_file_prefix = "meas-rndm-1000-500"
 out_dir = "artifacts"
 out_file_name = f"eFlesh_{data_file_prefix}.pt"
 
@@ -177,6 +180,40 @@ class eFleshDataset(torch.utils.data.Dataset):
             return y * torch.tensor(self.y_std, device=y.device) + torch.tensor(self.y_mean, device=y.device)
         return y * self.y_std + self.y_mean
 
+def make_split(n: int):
+    """
+    Returns (train_idx, val_idx, test_idx, description).
+
+    multipass == 1: random 60/20/20 split of the rows.
+    multipass == 2: not allowed.
+    multipass >= 3: no random split. The file is treated as consecutive data and
+                    split into contiguous 1:1:1 blocks: first third = training,
+                    second third = validation, final third = testing.
+    """
+    if multipass == 1:
+        idxs = np.arange(n)
+        np.random.shuffle(idxs)
+        n_train = int(0.6 * n)
+        n_val = int(0.2 * n)
+        train_idx = idxs[:n_train]
+        val_idx = idxs[n_train:n_train + n_val]
+        test_idx = idxs[n_train + n_val:]
+        desc = data_file_prefix
+    elif multipass == 2:
+        raise ValueError("multipass = 2 is not allowed")
+    elif multipass >= 3:
+        a = n // 3
+        b = (2 * n) // 3
+        train_idx = np.arange(0, a)
+        val_idx = np.arange(a, b)
+        test_idx = np.arange(b, n)
+        desc = (f"Contiguous 1:1:1 split for {multipass} passes "
+                f"(no random shuffling)")
+    else:
+        raise ValueError(f"Invalid multipass value: {multipass}")
+
+    return train_idx, val_idx, test_idx, desc
+
 def plot_learning_curve(train_hist, val_hist, best_epoch, out_dir):
     epochs_range = range(1, len(train_hist) + 1)
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -197,6 +234,57 @@ def plot_learning_curve(train_hist, val_hist, best_epoch, out_dir):
     plt.close(fig)
     print(f"Saved learning curve to {path}")
 
+@torch.no_grad()
+def evaluate(model, dataset, idx, device, criterion):
+    """Evaluates the model on the rows in idx. Returns metrics in real (unnormalised) units."""
+    loader = torch.utils.data.DataLoader(
+        torch.utils.data.Subset(dataset, idx), batch_size=batch_size, shuffle=False
+    )
+    model.eval()
+    all_pred, all_true, loss_sum, count = [], [], 0.0, 0
+    for Xb, Yb in loader:
+        Xb = Xb.float().to(device)
+        Yb = Yb.float().to(device)
+        pred = model(Xb)
+        loss = criterion(pred, Yb)
+        loss_sum += loss.item() * Xb.size(0)
+        count += Xb.size(0)
+        all_pred.append(pred.cpu().numpy())
+        all_true.append(Yb.cpu().numpy())
+
+    pred = np.concatenate(all_pred, axis=0)
+    true = np.concatenate(all_true, axis=0)
+    d = dataset.unnormalize_y(pred) - dataset.unnormalize_y(true)
+
+    per_col_rmse = np.sqrt(np.mean(d ** 2, axis=0))
+    spatial_rmse = np.sqrt(np.mean(np.sum(d[:, :3] ** 2, axis=1)))
+    return {
+        "mse": loss_sum / max(1, count),
+        "rmse_x": float(per_col_rmse[0]),
+        "rmse_y": float(per_col_rmse[1]),
+        "rmse_z": float(per_col_rmse[2]),
+        "rmse_3d": float(spatial_rmse),
+        "rmse_f": float(per_col_rmse[3]),
+    }
+
+def print_test_csv(test_metrics, split_desc, best_epoch, n_train, n_val, n_test):
+    """Prints the test results as a CSV block that can be copied straight into a spreadsheet."""
+    cols = [
+        "split", "best_epoch", "n_train", "n_val", "n_test",
+        "test_mse_normalised", "test_rmse_x_mm", "test_rmse_y_mm",
+        "test_rmse_z_mm", "test_rmse_3d_mm", "test_rmse_force_kg",
+    ]
+    vals = [
+        f'"{split_desc}"', str(best_epoch), str(n_train), str(n_val), str(n_test),
+        f"{test_metrics['mse']:.6f}", f"{test_metrics['rmse_x']:.4f}",
+        f"{test_metrics['rmse_y']:.4f}", f"{test_metrics['rmse_z']:.4f}",
+        f"{test_metrics['rmse_3d']:.4f}", f"{test_metrics['rmse_f']:.4f}",
+    ]
+    print("\n----- TEST RESULTS (CSV) -----")
+    print(",".join(cols))
+    print(",".join(vals))
+    print("----- END TEST RESULTS -----\n")
+
 def fit(
     dataset_full: eFleshDataset,
     epochs: int,
@@ -209,25 +297,10 @@ def fit(
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-        # Split dataset
+    # Split dataset into training, validation and testing
     n = len(dataset_full.X)
-    if multipass == 1:
-        # Random 80/20 split (unchanged behaviour)
-        idxs = np.arange(n)
-        np.random.shuffle(idxs)
-        split = int(0.8 * n)
-        train_idx, val_idx = idxs[:split], idxs[split:]
-    else:
-        # The file is `multipass` consecutive passes of equal length
-        if n % multipass != 0:
-            raise ValueError(f"{n} rows cannot be split into {multipass} equal passes")
-        pass_len = n // multipass
-        pass_id = np.arange(n) // pass_len
-        val_pass = multipass - 1  # last pass is used for validation
-        train_idx = np.where(pass_id != val_pass)[0]
-        val_idx = np.where(pass_id == val_pass)[0]
-        print(f"Multipass split: {multipass} passes of {pass_len} rows; "
-              f"validation = pass {val_pass + 1}, training = remaining {multipass - 1} pass(es)")
+    train_idx, val_idx, test_idx, split_desc = make_split(n)
+    print(f"{split_desc}: train {len(train_idx)} | val {len(val_idx)} | test {len(test_idx)}")
 
     # Compute normalization stats from the training split only
     x_mean = dataset_full.X[train_idx].mean(axis=0)
@@ -265,7 +338,7 @@ def fit(
     train_hist, val_hist = [], []
     best_val, best_epoch, best_state = float("inf"), 0, None
     best_stats = None
-    
+
     # Train: loop through epochs
     pbar = tqdm(range(1, epochs + 1), desc="Training", dynamic_ncols=True, position=0)
     metrics_bar = tqdm(total=0, bar_format="{desc}", dynamic_ncols=True, position=1)
@@ -348,7 +421,14 @@ def fit(
     print(f"  3D RMSE   {s['rmse_3d']:.4f} mm")
     print(f"  Force RMSE {s['rmse_f']:.4f} kg")
 
-    return model, (x_mean, x_std, y_mean, y_std), best_epoch
+    # Final evaluation on the held-out test split using the best-validation weights
+    test_metrics = evaluate(model, dataset, test_idx, device, criterion)
+    print_test_csv(
+        test_metrics, split_desc, best_epoch,
+        n_train=len(train_idx), n_val=len(val_idx), n_test=len(test_idx),
+    )
+
+    return model, (x_mean, x_std, y_mean, y_std), best_epoch, test_metrics
 
 def main():
     pattern = os.path.join(f"{data_folder}", f"{data_file_prefix}_*.csv")
@@ -356,6 +436,9 @@ def main():
     if not csv_path:
         raise FileNotFoundError(f"No measurement files found matching pattern: {pattern}")
     csv_path = csv_path[-1] # get most recent # TODO I DON'T LIKE THIS METHOD OF DOING IT
+
+    if multipass == 2:
+        raise ValueError("multipass = 2 is not allowed. Use 1, or 3 or more.")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -368,7 +451,7 @@ def main():
     print(f"Loaded {len(full)} samples "
           f"({full.X.shape[1]} sensor inputs -> {full.Y.shape[1]} targets: {full.TARGET_COLS})")
 
-    model, stats, best_epoch = fit(
+    model, stats, best_epoch, test_metrics = fit(
         dataset_full=full,
         epochs=epochs,
         batch_size=batch_size,
@@ -393,6 +476,7 @@ def main():
             "y_mean": stats[2],
             "y_std": stats[3],
             "best_epoch": best_epoch,
+            "test_metrics": test_metrics,
         },
         out_path,
     )
