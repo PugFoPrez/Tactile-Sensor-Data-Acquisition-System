@@ -42,7 +42,7 @@ multipass = 1 # number of passes done when probing
 
 # IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
-data_file_prefix = "meas-rndm-1000-500"
+data_file_prefix = "meas-rndm-500-250"
 out_dir = "artifacts"
 out_file_name = f"eFlesh_{data_file_prefix}.pt"
 
@@ -428,7 +428,13 @@ def fit(
         n_train=len(train_idx), n_val=len(val_idx), n_test=len(test_idx),
     )
 
-    return model, (x_mean, x_std, y_mean, y_std), best_epoch, test_metrics
+    split_info = {
+        "split_desc": split_desc,
+        "n_train": len(train_idx),
+        "n_val": len(val_idx),
+        "n_test": len(test_idx),
+    }
+    return model, (x_mean, x_std, y_mean, y_std), best_epoch, test_metrics, split_info
 
 def main():
     pattern = os.path.join(f"{data_folder}", f"{data_file_prefix}_*.csv")
@@ -451,7 +457,7 @@ def main():
     print(f"Loaded {len(full)} samples "
           f"({full.X.shape[1]} sensor inputs -> {full.Y.shape[1]} targets: {full.TARGET_COLS})")
 
-    model, stats, best_epoch, test_metrics = fit(
+    model, stats, best_epoch, test_metrics, split_info = fit(
         dataset_full=full,
         epochs=epochs,
         batch_size=batch_size,
@@ -477,6 +483,9 @@ def main():
             "y_std": stats[3],
             "best_epoch": best_epoch,
             "test_metrics": test_metrics,
+            "split_desc": split_info["split_desc"],
+            "n_train": split_info["n_train"],
+            "n_val": split_info["n_val"],
         },
         out_path,
     )
