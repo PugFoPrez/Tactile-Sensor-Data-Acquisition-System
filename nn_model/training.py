@@ -433,7 +433,7 @@ def main():
     csv_path = sorted(glob.glob(pattern))
     if not csv_path:
         raise FileNotFoundError(f"No measurement files found matching pattern: {pattern}")
-    csv_path = csv_path[-1] # get most recent # TODO I DON'T LIKE THIS METHOD OF DOING IT
+    csv_path = csv_path[-1] # get most recent
 
     if multipass == 2:
         raise ValueError("multipass = 2 is not allowed. Use 1, or 3 or more.")
