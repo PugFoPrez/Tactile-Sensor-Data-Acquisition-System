@@ -6,7 +6,6 @@ Below is a guide for use on Linux systems (Tested on Ubuntu 25.10). It covers ho
 
 Acknowledgements:
 - The eFlesh characterisation code is based off of the codes found in the eFlesh repository on [Github](https://github.com/notvenky/eFlesh). The eFlesh publication can be found [here](https://arxiv.org/pdf/2506.09994).
-- Claude AI has been used in the development of this code as the Neural Network development is not of core concern for this project.
 
 
 ## Setup
@@ -19,4 +18,5 @@ Install the required python packages using `pip install -r requirements.txt`. Th
 The script has variables at the top of the file for modifying the parameters of training. The IO parameters will need to point towards the directory where the measurements are stored as well as the prefix used in the filename (assuming these have been generated using the `generator.py` script). The output directory can also be set here.
 
 ## Overview of the codes
-`training.py` is used to train the machine learning model based on data collected by the data acquisition system.
+`training.py` is used to train the machine learning model based on data collected by the data acquisition system, reserving some data for a training split.
+`testing.py` is used to test the trained machine learning model against a baseline dataset to determine its performance.
