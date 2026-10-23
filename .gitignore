@@ -9,3 +9,4 @@ calibration.json
 ignore_*.py
 *.pt
 metrics_*.json
+/nn_model/artifacts/*.png
