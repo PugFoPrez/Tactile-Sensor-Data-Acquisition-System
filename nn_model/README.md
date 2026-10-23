@@ -1,6 +1,6 @@
 # eFlesh Data Acquisition System - Neural Network Model
 
-Developed by Bruce Davidson (Student ID: 20796033), Curtin University for undergraduate final year project.
+Developed by Bruce Davidson, Curtin University for undergraduate final year project.
     
 Below is a guide for use on Linux systems (Tested on Ubuntu 25.10). It covers how the data is expected to be structured, the general structure of the neural network model, as well as the output. For general setup and installation of the repository, please look through the main README documentation in the parent folder.
 

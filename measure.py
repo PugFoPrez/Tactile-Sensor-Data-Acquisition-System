@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Created by Bruce Davidson - Curtin University ID: 20796033
+# Created by Bruce Davidson - Curtin University
 #
 # Created:       21th July 2026
 # Last Modified: 14th Sep 2026 (Bruce Davidson)
