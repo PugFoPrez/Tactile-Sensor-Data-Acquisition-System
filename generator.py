@@ -8,11 +8,6 @@
 # generator.py
 # This script is used to generate gcode used for probing of a tactile sensor for data acquisition.
 
-# TODO
-# [ ] Improve setup (and maybe device recognition) - Look into https://github.com/manuelbl/usbx
-# [ ] Improve terminal UI/UX
-# [ ] Sanity check data from sensors before running script?
-
 from datetime import date
 import manipulation as mip
 import export
@@ -142,6 +137,8 @@ def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
     progressBar.update(task_probing, advance=1)
 
 def probeRandom(count=100):
+    """This function probes the specified number of random points within the probing bounds.
+    """
     global randomSeed
 
     step = 0
