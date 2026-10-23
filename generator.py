@@ -37,8 +37,8 @@ randomSeed = 0
 # Probing Offset corresponds to the topmost SW surface of the sensor
 probingOffset = [96.0, 92.0, 28.0]
 # Where to start and end probing
-probingMin = [0, 0, -5]
-probingMax = [25, 25, -10]
+probingMin = [0, 0, -2.5]
+probingMax = [25, 25, -7.5]
 # Amount of samples to probe in between each axis
 probingSteps = [16, 16, 6]
 # How long to wait at the probing position to measure
@@ -140,6 +140,41 @@ def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
     # Set progress
     mip.setProgress(100)
     progressBar.update(task_probing, advance=1)
+
+def probeRandom(count=100):
+    global randomSeed
+
+    step = 0
+    stepTotal = count
+    task_probing = progressBar.add_task("Probing...", total=stepTotal)
+    progressBar.start()
+
+    for i in range(0, count):
+        [x, y, z] = [random.uniform(probingMin[ix], probingMax[ix]),
+                    random.uniform(probingMin[iy], probingMax[iy]),
+                    random.uniform(probingMin[iz], probingMax[iz])]
+        [xx, yy, zz] = [probingOffset[ix] + x,
+                    probingOffset[iy] + y,
+                    probingOffset[iz] + z]
+        # Move to point above
+        mip.move(xx, yy, probingOffset[iz] + 5)
+        # Probe point
+        mip.comment(f"Probing point {i} XYZ({x:.2f}, {y:.2f}, {z:.2f})"
+                                f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
+        mip.move(xx, yy, zz, hop=False)
+        mip.dwell(probingDwell)
+        # Save measurements
+        meas.saveData([x,y,z])
+        mip.dwell(0.25)
+        # Move back up
+        mip.move(xx, yy, probingOffset[iz] + 5, hop=False)
+
+        # Set progress
+        step = step + 1
+        mip.setProgress(step / stepTotal * 100)
+        progressBar.update(task_probing, advance=1)
+        
+        randomSeed = randomSeed + 1
 
 def calibrate():
     """This function is used for the load cell calibration process, prompting the user for readings from the external scale.
@@ -288,6 +323,7 @@ def main():
     mip.move(0, 0, probingOffset[iz], hop=False)
     with keep.presenting(): # Prevent CPU suspend mid probing
         probeGrid()
+        # probeRandom()
         # probeNormalForce()
     mip.setProgress(100)
     progressBar.stop()
