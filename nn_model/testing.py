@@ -8,17 +8,6 @@
 # nn_model/testing.py
 # This script loads a trained contact and force estimation model for the eFlesh sensor
 # (saved by training.py) and evaluates it on a separate testing dataset.
-#
-# Expects the testing CSV to be formatted identically to the measurement CSVs
-# used for training, and named "<PREFIX>_<DATETIME>.csv"
-# e.g. "testing_2026-09-16 17:38:19.csv"
-#
-# Usage:
-#   python testing.py                          # latest testing_*.csv + default model
-#   python testing.py --csv "../measurements/testing_2026-09-16 17:38:19.csv"
-#   python testing.py --model artifacts/some_other_model.pt
-
-# WARNING: This file has been generated using Claude AI - To be reviewed
 
 import argparse
 import os
@@ -30,7 +19,7 @@ import torch.nn as nn
 
 from training import MLP, eFleshDataset, print_test_csv
 
-# IO Parameters (keep the same as in training.py)
+# IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
 test_file_prefix = "meas-baseline-extent" # The baseline dataset to test off of
 out_dir = "artifacts"
@@ -42,11 +31,10 @@ batch_size = 1024
 
 
 def load_model(model_path: str, device: torch.device):
-    # weights_only=False because the checkpoint contains numpy arrays (normalisation stats)
-    # Only load checkpoints that you created yourself
+    # Load checkpoints
     ckpt = torch.load(model_path, map_location=device, weights_only=False)
 
-    # Infer hidden width from the saved weights rather than assuming the default
+    # Infer hidden width from the saved weights
     hidden = ckpt["state_dict"]["net.0.weight"].shape[0]
     model = MLP(in_dim=ckpt["in_dim"], out_dim=ckpt["out_dim"], hidden=hidden).to(device)
     model.load_state_dict(ckpt["state_dict"])
@@ -71,13 +59,13 @@ def evaluate(model: nn.Module, dataset: eFleshDataset, device: torch.device):
             all_pred.append(pred.cpu())
             all_true.append(Yb.cpu())
 
-    # MSE in normalised space (equivalent to "Val MSE" in training.py)
+    # MSE in normalised space
     test_mse = loss_sum / max(1, count)
 
     pred = torch.cat(all_pred, dim=0)
     true = torch.cat(all_true, dim=0)
 
-    # Convert back to real units (mm for X/Y/Z, kg for load cell)
+    # Convert back to real-world units
     pred_real = torch.from_numpy(dataset.unnormalize_y(pred.numpy()))
     true_real = torch.from_numpy(dataset.unnormalize_y(true.numpy()))
     d = pred_real - true_real
@@ -117,7 +105,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, ckpt = load_model(args.model, device)
 
-    # Load the test set, normalised using the TRAINING statistics saved in the checkpoint
+    # Load the normalised test set
     dataset = eFleshDataset(
         csv_path=csv_path,
         magnetometer_thresh=ckpt.get("magnetometer_thresh"),
@@ -126,7 +114,7 @@ def main():
         normalize_x=True, normalize_y=True,
     )
 
-    # Sanity checks: the test CSV must have the same layout the model was trained on
+    # Check CSV structure
     if dataset.sensor_names != list(ckpt["sensor_names"]):
         raise ValueError(
             f"Sensor columns differ from training.\n"
@@ -143,7 +131,6 @@ def main():
 
     m = evaluate(model, dataset, device)
 
-    # Same format as the training script's metrics bar
     print(
         f"Test MSE {m['test_mse']:.4f} | "
         f"RMSE x {m['rmse_x']:.2f} y {m['rmse_y']:.2f} z {m['rmse_z']:.2f} | "
@@ -151,7 +138,6 @@ def main():
         f"F {m['rmse_force_kg']:.3f} kg"
     )
 
-    # Copyable CSV block, same layout as training.py.
     test_name = model_file_prefix
     print_test_csv(
         test_metrics={
@@ -169,7 +155,7 @@ def main():
         n_test=m["n_samples"],
     )
 
-    # Record metrics to disk
+    # Save metrics
     os.makedirs(out_dir, exist_ok=True)
     safe_stem = os.path.splitext(os.path.basename(model_file_prefix))[0].replace(" ", "_").replace(":", "-")
     metrics_path = os.path.join(out_dir, f"metrics_{safe_stem}.json")

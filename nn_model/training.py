@@ -9,11 +9,6 @@
 # This script is used for training a contact and force estimation model for the eFlesh sensor.
 
 # Below code has been adapted from the original eFlesh paper
-# Code has been adapted using Claude to help parse the originally very dense code
-# NN development not a core focus of this thesis
-
-# Note that this is not a perfect implementation of the neural network!!
-# This is not a focus of the project
 
 import argparse
 import copy
@@ -42,7 +37,7 @@ multipass = 1 # number of passes done when probing
 
 # IO Parameters
 data_folder = f"..{os.sep}measurements{os.sep}"
-data_file_prefix = "meas-rndm-500-250"
+data_file_prefix = "meas"
 out_dir = "artifacts"
 out_file_name = f"eFlesh_{data_file_prefix}.pt"
 
@@ -116,7 +111,7 @@ class eFleshDataset(torch.utils.data.Dataset):
         # Reformat data
         data = np.asarray(rows, dtype=np.float64)
 
-        # A single NaN/inf would make every loss NaN without raising, so fail loudly here
+        # Fail if NaN/inf is encountered
         bad = ~np.isfinite(data)
         if bad.any():
             r, c = np.argwhere(bad)[0]
@@ -129,12 +124,6 @@ class eFleshDataset(torch.utils.data.Dataset):
         target_idx = [col_idx[name] for name in self.TARGET_COLS]
         sensor_idx = [i for i in range(len(header)) if i not in target_idx]
 
-        # Threshold the magnetometer readings
-        # i.e., assume that any reading below this value is zero
-        # and is due to noise
-        # TODO understand the impact of this first
-        # if magnetometer_thresh is not None:
-
         self.header = header
         self.sensor_names = [header[i] for i in sensor_idx]
         self.X = data[:, sensor_idx].astype(np.float32)
@@ -144,7 +133,7 @@ class eFleshDataset(torch.utils.data.Dataset):
         self.normalize_x = normalize_x
         self.normalize_y = normalize_y
 
-        # TODO idk what the below is but figure it out
+        # Save mean and std
         if self.normalize_x:
             if x_mean is None or x_std is None:
                 x_mean = self.X.mean(axis=0)
@@ -190,6 +179,7 @@ def make_split(n: int):
                     split into contiguous 1:1:1 blocks: first third = training,
                     second third = validation, final third = testing.
     """
+    # Random split
     if multipass == 1:
         idxs = np.arange(n)
         np.random.shuffle(idxs)
@@ -199,8 +189,10 @@ def make_split(n: int):
         val_idx = idxs[n_train:n_train + n_val]
         test_idx = idxs[n_train + n_val:]
         desc = data_file_prefix
+    # Can't random split or temporally split
     elif multipass == 2:
         raise ValueError("multipass = 2 is not allowed")
+    # Temporal split (n:1:1 - training:validation:testing)
     elif multipass >= 3:
         a = n // 3
         b = (2 * n) // 3
