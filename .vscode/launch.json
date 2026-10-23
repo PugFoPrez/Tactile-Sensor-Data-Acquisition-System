@@ -25,6 +25,14 @@
             "program": "training.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/nn_model/"
+        },
+        {
+            "name": "Python Debugger: NN Testing Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "testing.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/nn_model/"
         }
     ]
 }
