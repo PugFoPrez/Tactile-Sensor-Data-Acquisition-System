@@ -27,7 +27,7 @@ The repository can be downloaded from Github using: `git clone https://github.co
 Install the required python packages using `pip install -r requirements.txt`. This will install generic packages as well as ones for terminal and device communication.
 
 ### Setting up the CNC machine and Sensors
-The following provides a brief guide on how to setup and configure the CNC machine and sensors for use in the project. A more detailed guide is given in the #todo thesis filename, detailing each step with images provided for reference, as well as additional detail explaining how the system works (please read it I spent a lot of time on it).
+The following provides a brief guide on how to setup and configure the CNC machine and sensors for use in the project. A more detailed guide is given in the attached thesis titled "Design and development of a customisable, open-source data acquisition facility for tactile sensor testing" by Bruce Davidson, detailing each step with images provided for reference, as well as additional detail explaining how the system works (please read it I spent a lot of time on it).
 
 #### 3D Printer
 

@@ -1,0 +1,9 @@
+cff-version: 1.0.0
+message: "If you use this software or the designs provided, please cite it as below."
+authors:
+- family-names: "Davidson"
+  given-names: "Bruce Steven"
+title: "Design and development of a customisable, open-source data acquisition facility for tactile sensor testing"
+version: 0.1.0
+date-released: 2026-10-25
+url: "https://github.com/PugFoPrez/Tactile-Sensor-Data-Acquisition-System"
