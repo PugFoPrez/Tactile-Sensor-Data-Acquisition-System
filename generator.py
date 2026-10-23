@@ -37,8 +37,8 @@ randomSeed = 0
 # Probing Offset corresponds to the topmost SW surface of the sensor
 probingOffset = [96.0, 92.0, 28.0]
 # Where to start and end probing
-probingMin = [0, 0, -5]
-probingMax = [25, 25, -10]
+probingMin = [0, 0, -2.5]
+probingMax = [25, 25, -7.5]
 # Amount of samples to probe in between each axis
 probingSteps = [16, 16, 6]
 # How long to wait at the probing position to measure
