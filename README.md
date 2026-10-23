@@ -175,6 +175,7 @@ Python scripts:
 - `terminal.py`: This script handles getting user input from the terminal and changing terminal behaviour. Note that the behaviours in this script may cause the user's terminal to not display anything (If the display mode is never reset). This can be fixed by running `reset` in the terminal.
 
 Configuration:
+- `configuration.py`: Provides interface between script and settings from `settings.json`.
 - `settings.json`: User defined settings to be used to configure communication and probing behaviour.
 
 Other files:
