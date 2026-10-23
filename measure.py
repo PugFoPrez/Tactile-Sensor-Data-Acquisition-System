@@ -29,13 +29,13 @@ data_filename = "measurements/" + data_prefix + "_" + datetime.now().strftime("%
 class measurement:
     """Measurement class for 3D printer positioning, load cell value, and eFlesh magnetometer values
     """
-    def __init__(self, position=[0,0,0], loadCell=[0], eFlesh=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]):
+    def __init__(self, position=[0,0,0], loadCell=[0], eFlesh=[0,0,0,0,0]):
         """Initialises a new measurement object
 
         Args:
             position (list, optional): The X,Y,Z position of the printer toolhead. Defaults to [0,0,0].
             loadCell (list, optional): The load cell measured value. Defaults to [0].
-            eFlesh (list, optional): The eFlesh magnetometer sensors measured values. Defaults to [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0].
+            eFlesh (list, optional): The eFlesh magnetometer sensors measured values. Defaults to [0,0,0,0,0].
         """
         self.position = position
         self.loadCell = loadCell
