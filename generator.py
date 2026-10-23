@@ -57,7 +57,7 @@ def entryCode():
     mip.comment("Home")
     mip.home()
 
-def probeGrid(maxRandomOffset=[0,0,0]):
+def probeGrid(multipass=1, maxRandomOffset=[0,0,0]):
     global randomSeed
     """This function generates the point grid for the 3D printer to use in probing.
     It additionally loops through each of these points and sends the appropriate movement commands to the printer, as well saving data from the sensors.
@@ -70,52 +70,54 @@ def probeGrid(maxRandomOffset=[0,0,0]):
     pointsZ = np.linspace(probingMin[iz], probingMax[iz], probingSteps[iz])
 
     step = 0
-    stepTotal = len(pointsX) * len(pointsY) * len(pointsZ)
+    stepTotal = len(pointsX) * len(pointsY) * len(pointsZ) * multipass
     task_probing = progressBar.add_task("Probing...", total=stepTotal)
     progressBar.start()
 
-    for x in pointsX:
-        # Random offset on X
-        random.seed(randomSeed)
-        randomOffsetX = random.random() * maxRandomOffset[ix]
-        x = x + randomOffsetX
+    for i_pass in range(multipass):
+        mip.comment(f"Completing pass {i_pass} of {multipass}.")
+        for x in pointsX:
+            # Random offset on X
+            random.seed(randomSeed)
+            randomOffsetX = random.random() * maxRandomOffset[ix]
+            x = x + randomOffsetX
 
-        for y in pointsY:
-            # Random offset on Y
-            randomOffsetY = random.random() * maxRandomOffset[iy]
-            y = y + randomOffsetY
-            # Update seed
-            randomSeed = randomSeed + 1
+            for y in pointsY:
+                # Random offset on Y
+                randomOffsetY = random.random() * maxRandomOffset[iy]
+                y = y + randomOffsetY
+                # Update seed
+                randomSeed = randomSeed + 1
 
-            xx = x + probingOffset[ix]
-            yy = y + probingOffset[iy]
-            zz = probingOffset[iz] + 5
+                xx = x + probingOffset[ix]
+                yy = y + probingOffset[iy]
+                zz = probingOffset[iz] + 5
 
-            # Move to point above
-            mip.move(xx, yy, zz)
+                # Move to point above
+                mip.move(xx, yy, zz)
 
-            for z in pointsZ:
-                # Seed for a Z location
-                random.seed(randomSeed + x + y + z)
-                randomOffsetZ = random.random() * maxRandomOffset[iz]
-                z = z + randomOffsetZ
-                zz = z + probingOffset[iz]
+                for z in pointsZ:
+                    # Seed for a Z location
+                    random.seed(randomSeed + x + y + z)
+                    randomOffsetZ = random.random() * maxRandomOffset[iz]
+                    z = z + randomOffsetZ
+                    zz = z + probingOffset[iz]
 
-                mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
-                            f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
-                # Probe point
-                mip.move(xx, yy, zz, hop=False)
-                mip.dwell(probingDwell)
-                # Save measurements
-                meas.saveData([x,y,z])
-                mip.dwell(0.25)
+                    mip.comment(f"Probing point XYZ({x:.2f}, {y:.2f}, {z:.2f})"
+                                f" at ({xx:.2f}, {yy:.2f}, {zz:.2f})")
+                    # Probe point
+                    mip.move(xx, yy, zz, hop=False)
+                    mip.dwell(probingDwell)
+                    # Save measurements
+                    meas.saveData([x,y,z])
+                    mip.dwell(0.25)
 
-                # Set progress
-                step = step + 1
-                mip.setProgress(step / stepTotal * 100)
-                progressBar.update(task_probing, advance=1)
-            # Move to next XY point
-            mip.move(xx, yy, probingOffset[iz], hop=False)
+                    # Set progress
+                    step = step + 1
+                    mip.setProgress(step / stepTotal * 100)
+                    progressBar.update(task_probing, advance=1)
+                # Move to next XY point
+                mip.move(xx, yy, probingOffset[iz], hop=False)
 
 def probeNormalForce(x=105, y=105, z=probingOffset[iz]-5):
     """This function probes the center of the sensor to determine normal force values.
