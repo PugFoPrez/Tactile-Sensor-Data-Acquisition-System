@@ -1,6 +1,6 @@
 # eFlesh Data Acquisition System
 
-Version: v0.1.0
+Version: v1.0.0
 
 ---
 
