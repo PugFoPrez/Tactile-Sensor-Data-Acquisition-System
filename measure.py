@@ -135,7 +135,7 @@ class loadCellMeasure:
         Args:
             port (string): Which USB port to set up serial communication on.
         """
-        cls.srl = serial.Serial(port, 9600, timeout=1)
+        cls.srl = serial.Serial(port, 115200, timeout=1)
         time.sleep(0.1)
         cls.srl.reset_input_buffer()
 
